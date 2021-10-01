@@ -150,11 +150,10 @@ namespace V8.Net
                 if (mo == null)
                     return null;
 
-                var hValue = new InternalHandle(value, true);
-                hValue.IsToBeKeptAlive = false;
-                using (hValue) 
+                var jsValue = new InternalHandle(value, true);
+                using (jsValue) 
                 {
-                    using (var jsRes = mo.NamedPropertySetter(ref propertyName, hValue, V8PropertyAttributes.Undefined).KeepAlive())
+                    using (var jsRes = mo.NamedPropertySetter(ref propertyName, ref jsValue, V8PropertyAttributes.Undefined).KeepAlive())
                         return jsRes;
                 }
             }
@@ -252,11 +251,10 @@ namespace V8.Net
                 if (mo == null)
                     return null;
 
-                var hValue = new InternalHandle(value, true);
-                hValue.IsToBeKeptAlive = false;
-                using (hValue) 
+                var jsValue = new InternalHandle(value, true);
+                using (jsValue) 
                 {
-                    using (var jsRes = mo.IndexedPropertySetter(index, hValue).KeepAlive())
+                    using (var jsRes = mo.IndexedPropertySetter(index, ref jsValue).KeepAlive())
                         return jsRes;
                 }
             }
@@ -493,7 +491,8 @@ namespace V8.Net
 
             // ... create object locally first and index it ...
 
-            var obj = _Engine._CreateManagedObject<T>(this, InternalHandle.Empty);
+            var jsEmpty = InternalHandle.Empty;
+            var obj = _Engine._CreateManagedObject<T>(this, ref jsEmpty);
 
             // ... create the native object and associated it to the managed wrapper ...
 
@@ -526,7 +525,7 @@ namespace V8.Net
         /// <summary>
         /// Calls the V8 'Set()' function on the underlying native object template to set properties that will exist on all objects created from this template.
         /// </summary>
-        public void SetProperty(string name, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None)
+        public void SetProperty(string name, ref InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None)
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name (cannot be null, empty, or only whitespace)");
 

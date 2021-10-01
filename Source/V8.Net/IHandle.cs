@@ -176,7 +176,7 @@ namespace V8.Net
         /// you do not need to call this method anymore. The GC will track it and dispose it when ready.</para>
         /// <para>Note 2: If the current handle is locked (see IsLocked) then an exception error can occur.</para>
         /// </summary>
-        InternalHandle Set(InternalHandle handle);
+        InternalHandle Set(ref InternalHandle handle);
 
         /// <summary>
         /// Returns true if this handle is disposed (no longer in use).  Disposed native proxy handles are kept in a cache for performance reasons.
@@ -222,7 +222,7 @@ namespace V8.Net
         /// Returns true if successful.
         /// </summary>
         /// <param name="attributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
-        bool SetProperty(string name, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined);
+        bool SetProperty(string name, ref InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined);
 
         /// <summary>
         /// Calls the V8 'Set()' function on the underlying native object.
@@ -235,7 +235,7 @@ namespace V8.Net
         ///     <para>Warning: V8 does not support setting attributes using numerical indexes.  If you set an attribute, the given
         ///     value is converted to a string, and a named property setter will be used instead. </para>
         /// </param>
-        bool SetProperty(Int32 index, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined);
+        bool SetProperty(Int32 index, ref InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined);
 
         /// <summary>
         /// Sets a property to a given object. If the object is not V8.NET related, then the system will attempt to bind the instance and all public members to
@@ -331,7 +331,7 @@ namespace V8.Net
         /// The '_this' property is the "this" object within the function when called.
         /// If the function name is null or empty, then the current object is assumed to be a function object.
         /// </summary>
-        InternalHandle Call(string functionName, InternalHandle _this, params InternalHandle[] args);
+        InternalHandle Call(string functionName, ref InternalHandle _this, params InternalHandle[] args);
 
         /// <summary>
         /// Calls an object property with a given name on a specified object as a function and returns the result.

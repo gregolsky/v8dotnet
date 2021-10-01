@@ -13,7 +13,7 @@ namespace V8.Net
         /// <summary>
         /// A JavaScript associated value.
         /// Call one of the "Create???()" methods to create/build a required type for the JavaScript value that represents 'Source'.
-        /// <para>Note: Because this is a value type property, just assign a value to the property - DON'T call '{InternalHandle}.Set()', it will not work as expected.</para>
+        /// <para>Note: Because this is a value type property, just assign a value to the property - DON'T call '{InternalHandle}.Set(ref )', it will not work as expected.</para>
         /// </summary>
         InternalHandle Value { get; set; }
 
@@ -42,9 +42,9 @@ namespace V8.Net
         /// <summary>
         /// A JavaScript associated value.  By default, this returns 'Handle.Empty' (which means 'Value' is 'null' internally).
         /// Call one of the "V8Engine.Create???()" methods to create/build a required type for the JavaScript value that represents 'Source'.
-        /// <para>Note: Because this is a value type property, just assign a value to the property - DON'T call '{InternalHandle}.Set()', it will not work as expected.</para>
+        /// <para>Note: Because this is a value type property, just assign a value to the property - DON'T call '{InternalHandle}.Set(ref )', it will not work as expected.</para>
         /// </summary>
-        InternalHandle IJSProperty.Value { get { return _Value; } set { _Value.Set(value); } }
+        InternalHandle IJSProperty.Value { get { return _Value; } set { _Value.Set(ref value); } }
         internal InternalHandle _Value;
 
         /// <summary>
@@ -58,12 +58,13 @@ namespace V8.Net
         /// </summary>
         public JSProperty(V8PropertyAttributes attributes = V8PropertyAttributes.None) { Source = default(TValueSource); _Attributes = attributes; }
         public JSProperty(TValueSource source, V8PropertyAttributes attributes = V8PropertyAttributes.None) { Source = source; _Attributes = attributes; }
-        public JSProperty(TValueSource source, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None) : this(source, attributes) { _Value.Set(value); }
-        public JSProperty(InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None) : this(default(TValueSource), value, attributes) { }
+        public JSProperty(TValueSource source, ref InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None) : this(source, attributes) { _Value.Set(ref value); }
+        public JSProperty(InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None) : this(default(TValueSource), ref value, attributes) { }
         public JSProperty(V8Engine engine, object value, V8PropertyAttributes attributes = V8PropertyAttributes.None)
             : this(InternalHandle.Empty, attributes)
         {
-            _Value.Set(engine != null ? engine.CreateValue(value) : InternalHandle.Empty);
+            InternalHandle jsValue = engine != null ? engine.CreateValue(value) : InternalHandle.Empty;
+            _Value.Set(ref jsValue);
         }
 
         ~JSProperty()
@@ -120,7 +121,7 @@ namespace V8.Net
         /// </summary>
         public JSProperty(V8PropertyAttributes attributes = V8PropertyAttributes.None) : base(attributes) { }
         public JSProperty(object source, V8PropertyAttributes attributes = V8PropertyAttributes.None) : base(source, attributes) { }
-        public JSProperty(object source, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None) : base(source, value, attributes) { }
+        public JSProperty(object source, ref InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None) : base(source, ref value, attributes) { }
         public JSProperty(InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None) : base(value, attributes) { }
         public JSProperty(V8Engine engine, object value, V8PropertyAttributes attributes = V8PropertyAttributes.None) : base(engine, value, attributes) { }
 

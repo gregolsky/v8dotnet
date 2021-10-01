@@ -40,7 +40,7 @@ namespace V8.Net
         /// <para>To allow the V8 engine to perform the default set action, return "Handle.Empty".</para>
         /// </summary>
         /// <param name="attributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
-        InternalHandle NamedPropertySetter(ref string propertyName, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined);
+        InternalHandle NamedPropertySetter(ref string propertyName, ref InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined);
 
         /// <summary>
         /// Let's the V8 engine know the attributes for the specified property.
@@ -80,7 +80,7 @@ namespace V8.Net
         ///     value is converted to a string, and a named property setter will be used instead. </para>
         /// </param>
         /// <returns> An InternalHandle. </returns>
-        InternalHandle IndexedPropertySetter(int index, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined);
+        InternalHandle IndexedPropertySetter(int index, ref InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined);
 
         /// <summary>
         /// Let's the V8 engine know the attributes for the specified property.
@@ -249,11 +249,11 @@ namespace V8.Net
             return this[propertyName].Value;
         }
 
-        public virtual InternalHandle NamedPropertySetter(ref string propertyName, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
+        public virtual InternalHandle NamedPropertySetter(ref string propertyName, ref InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
         {
             if (_Proxy != this)
             {
-                var result = ((IV8ManagedObject)_Proxy).NamedPropertySetter(ref propertyName, value, attributes);
+                var result = ((IV8ManagedObject)_Proxy).NamedPropertySetter(ref propertyName, ref value, attributes);
                 if (!result.IsUndefined) return result;
             }
 
@@ -332,11 +332,11 @@ namespace V8.Net
             return this[index].Value;
         }
 
-        public virtual InternalHandle IndexedPropertySetter(int index, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
+        public virtual InternalHandle IndexedPropertySetter(int index, ref InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
         {
             if (_Proxy != this)
             {
-                var result = ((IV8ManagedObject)_Proxy).IndexedPropertySetter(index, value, attributes);
+                var result = ((IV8ManagedObject)_Proxy).IndexedPropertySetter(index, ref value, attributes);
                 if (!result.IsUndefined) return result;
             }
 
@@ -406,17 +406,17 @@ namespace V8.Net
         // Since some base methods operate on object properties, and the properties exist on this managed object, we override
         // them here to speed things up.
 
-        public override bool SetProperty(string name, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None)
+        public override bool SetProperty(string name, ref InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None)
         {
-            var result = NamedPropertySetter(ref name, value, attributes);
-            if (result.IsUndefined) return base.SetProperty(name, value, attributes); // (if this virtual override fails to set the property, try to do it via the base [directly on the native object])
+            var result = NamedPropertySetter(ref name, ref value, attributes);
+            if (result.IsUndefined) return base.SetProperty(name, ref value, attributes); // (if this virtual override fails to set the property, try to do it via the base [directly on the native object])
             return true;
         }
 
-        public override bool SetProperty(int index, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
+        public override bool SetProperty(int index, ref InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
         {
-            var result = IndexedPropertySetter(index, value);
-            if (result.IsUndefined) return base.SetProperty(index, value, attributes);
+            var result = IndexedPropertySetter(index, ref value);
+            if (result.IsUndefined) return base.SetProperty(index, ref value, attributes);
             return true;
         }
 

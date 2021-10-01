@@ -33,7 +33,7 @@ namespace V8.Net
     /// </summary>
     public unsafe class Handle : IV8Disposable, IHandleBased, INativeHandleBased, IDynamicMetaObjectProvider
     {
-        public static readonly Handle Empty = new Handle(null);
+        public static readonly Handle Empty = new Handle();
 
         internal InternalHandle _Handle;
 
@@ -45,7 +45,7 @@ namespace V8.Net
         public InternalHandle _ { get { return _Handle; } }
 
         protected Handle() { }
-        internal Handle(InternalHandle h)
+        internal Handle(ref InternalHandle h)
         {
             if (h._Object != null)
                 throw new InvalidOperationException("'h._Object' must be null - not allowed to overwrite existing object references on handles.");
@@ -211,7 +211,7 @@ namespace V8.Net
         ///     Normally this is not a problem, unless one is testing the GC, as it may prevent the GC from collecting the object
         ///     during the test.</para>
         /// </summary>
-        public static InternalHandle GetUntrackedHandleFromInternal(InternalHandle source) { var h = Empty; h._HandleProxy = source; return h; }
+        public static InternalHandle GetUntrackedHandleFromInternal(ref InternalHandle source) { var h = Empty; h._HandleProxy = source; return h; }
         public static InternalHandle GetUntrackedHandleFromProxy(HandleProxy* source) { var h = Empty; h._HandleProxy = source; return h; }
         public static InternalHandle GetUntrackedHandleFromObject(V8NativeObject source) { var h = Empty; h._HandleProxy = source._Handle; return h; }
 
@@ -299,7 +299,7 @@ namespace V8.Net
                     /*if (_Object == null) {
                         GetTrackableHandle(); //_Object = Object;
                     }*/
-                    if (Engine._MakeObjectRooted(_HandleProxy->_ObjectID, _Object, this)) // (returns false if already rooted)
+                    if (Engine._MakeObjectRooted(_HandleProxy->_ObjectID, _Object, ref this)) // (returns false if already rooted)
                         V8NetProxy.MakeWeakHandle(this);
                 }
             }
@@ -328,11 +328,11 @@ namespace V8.Net
         }
 
         ///// <summary>
-        ///// Cloning is no longer necessary.  Please use '{source}.KeepAlive()' or '{target}.Set({source})' instead.
+        ///// Cloning is no longer necessary.  Please use '{source}.KeepAlive()' or '{target}.Set(ref {source})' instead.
         ///// </summary>
         ///// <returns></returns>
-        //[Obsolete("Cloning is no longer necessary.  Please use '{source}.KeepAlive()' or '{target}.Set({source})' instead.", true)]
-        //?public InternalHandle Clone() { throw new NotSupportedException("Cloning is no longer necessary.  Please use '{source}.KeepAlive()' or '{target}.Set({source})' instead."); }
+        //[Obsolete("Cloning is no longer necessary.  Please use '{source}.KeepAlive()' or '{target}.Set(ref {source})' instead.", true)]
+        //?public InternalHandle Clone() { throw new NotSupportedException("Cloning is no longer necessary.  Please use '{source}.KeepAlive()' or '{target}.Set(ref {source})' instead."); }
 
         /// <summary>
         /// Returns a 'Handle' instance that can be used to track this value-based handle.  When no more value-based handles
@@ -368,7 +368,7 @@ namespace V8.Net
                     }
                     else if (createIfMissing)
                     {
-                        h = (_Object != null && _Object is Handle no) ? no : new Handle(this); // (need to create a new tracker handle)                   
+                        h = (_Object != null && _Object is Handle no) ? no : new Handle(ref this); // (need to create a new tracker handle)                   
                         if (handleID >= engine._TrackerHandles.Length)
                             Array.Resize(ref engine._TrackerHandles, (100 + handleID) * 2); // (make sure the tracker handle quick reference array can contain the handle ID)
                         if (handleID >= engine._TrackerHandles.Length)
@@ -391,7 +391,7 @@ namespace V8.Net
                 }
 
                 /*if (_Object is V8NativeObject no && no._Handle.IsEmpty) {
-                    no._Handle.Set(this); // (if the object used to track this handle does not represent the current handle, then make sure it does)
+                    no._Handle.Set(ref this); // (if the object used to track this handle does not represent the current handle, then make sure it does)
                 }*/
 
                 _HandleProxy->ManagedReference = _Object != null ? 2 : 1; // (lets the native side know if there's a managed reference responsible for disposing the native handle proxy)
@@ -475,7 +475,7 @@ namespace V8.Net
         /// you do not need to call this method anymore. The GC will track it and dispose it when ready.</para>
         /// <para>Note 2: If the current handle is locked (see IsLocked) then an exception error can occur.</para>
         /// </summary>
-        public InternalHandle Set(InternalHandle h)
+        public InternalHandle Set(ref InternalHandle h)
         {
             h.KeepTrack();
             _Set(h);
@@ -483,7 +483,7 @@ namespace V8.Net
             return this;
         }
 
-        private InternalHandle _Set(InternalHandle h)
+        private InternalHandle _Set(ref InternalHandle h)
         {
             if (_HandleProxy != h._HandleProxy)
             {
@@ -571,14 +571,6 @@ namespace V8.Net
             get {
                 var cref = Engine?.GetCountedReference(HandleID);
                 return (cref?.IsRefCountPresent ?? false) ? cref : null;
-            }
-        }
-
-        public bool IsToBeKeptAlive {
-            get {
-                return false;
-            }
-            set {
             }
         }
 
@@ -984,7 +976,7 @@ namespace V8.Net
 
                     if (CLRTypeID >= 0)
                     {
-                        var argInfo = new ArgInfo(Engine, this);
+                        var argInfo = new ArgInfo(Engine, ref this);
                         return argInfo.ValueOrDefault; // (this object represents a ArgInfo object, so return its value)
                     }
 
@@ -1015,7 +1007,7 @@ namespace V8.Net
 
                     if (CLRTypeID >= 0)
                     {
-                        var argInfo = new ArgInfo(Engine, this);
+                        var argInfo = new ArgInfo(Engine, ref this);
                         return argInfo.ValueOrDefault; // (this object represents a ArgInfo object, so return its value)
                     }
 
@@ -1442,6 +1434,9 @@ namespace V8.Net
         internal const string _NOT_AN_OBJECT_ERRORMSG = "The handle does not represent a JavaScript object.";
         internal const string _VALUE_NOT_AN_OBJECT_ERRORMSG = "The handle {0} does not represent a JavaScript object.";
 
+        public delegate bool DelegateSetPropertyByName(string name, ref InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None);
+        public delegate bool DelegateSetPropertyByIndex(Int32 index, ref InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None);
+
         /// <summary> Calls the V8 'Set()' function on the underlying native object. Returns true if successful. </summary>
         /// <exception cref="ArgumentNullException"> Thrown when one or more required arguments are null. </exception>
         /// <exception cref="InvalidOperationException"> Thrown when the requested operation is invalid. </exception>
@@ -1452,7 +1447,7 @@ namespace V8.Net
         /// </param>
         /// <returns> True if it succeeds, false if it fails. </returns>
         /// <seealso cref="M:V8.Net.IV8Object.SetProperty(string,InternalHandle,V8PropertyAttributes)"/>
-        public bool SetProperty(string name, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None)
+        public bool SetProperty(string name, ref InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None)
         {
             using (value.KeepAlive()) {
                 if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name (cannot be null, empty, or only whitespace)");
@@ -1475,7 +1470,7 @@ namespace V8.Net
         /// </param>
         /// <returns> True if it succeeds, false if it fails. </returns>
         /// <seealso cref="M:V8.Net.IV8Object.SetProperty(Int32,InternalHandle,V8PropertyAttributes)"/>
-        public bool SetProperty(Int32 index, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None)
+        public bool SetProperty(Int32 index, ref InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None)
         {
             using (value.KeepAlive()) {
                 // ... can only set properties on objects ...
@@ -1505,23 +1500,30 @@ namespace V8.Net
             if (!IsObjectType)
                 throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
 
-            if (name.IsNullOrWhiteSpace())
+            if (name.IsNullOrWhiteSpace()) {
                 if (obj == null) throw new InvalidOperationException("You cannot pass 'null' without a valid property name.");
                 else
                     name = obj.GetType().Name;
+            }
 
-            if (obj is IHandleBased)
-                return SetProperty(name, ((IHandleBased)obj).InternalHandle, (V8PropertyAttributes)(memberSecurity ?? ScriptMemberSecurity.ReadWrite));
+            if (obj is IHandleBased) {
+                var jsObj = ((IHandleBased)obj).InternalHandle;
+                return SetProperty(name, ref jsObj, (V8PropertyAttributes)(memberSecurity ?? ScriptMemberSecurity.ReadWrite));
+            }
 
             if (obj == null || obj is string || obj.GetType().IsValueType) // TODO: Check enum support.
-                return SetProperty(name, Engine.CreateValue(obj), (V8PropertyAttributes)(memberSecurity ?? ScriptMemberSecurity.ReadWrite));
+            {
+                InternalHandle jsObj = Engine.CreateValue(obj);
+                return SetProperty(name, ref jsObj, (V8PropertyAttributes)(memberSecurity ?? ScriptMemberSecurity.ReadWrite));
+            }
+            else {
+                InternalHandle jsObj = Engine.CreateBinding(obj, className, recursive, memberSecurity);
 
-            var nObj = Engine.CreateBinding(obj, className, recursive, memberSecurity);
-
-            if (memberSecurity != null)
-                return SetProperty(name, nObj, (V8PropertyAttributes)memberSecurity);
-            else
-                return SetProperty(name, nObj);
+                if (memberSecurity != null)
+                    return SetProperty(name, ref jsObj, (V8PropertyAttributes)memberSecurity);
+                else
+                    return SetProperty(name, ref jsObj);
+            }
         }
 
         /// <summary>
@@ -1542,18 +1544,24 @@ namespace V8.Net
             if (!IsObjectType)
                 throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
 
-            if (obj is IHandleBased)
-                return SetProperty(index, ((IHandleBased)obj).InternalHandle, (V8PropertyAttributes)(memberSecurity ?? ScriptMemberSecurity.ReadWrite));
+            if (obj is IHandleBased) {
+                var jsValue = ((IHandleBased)obj).InternalHandle;
+                return SetProperty(index, ref jsValue, (V8PropertyAttributes)(memberSecurity ?? ScriptMemberSecurity.ReadWrite));
+            }
 
             if (obj == null || obj is string || obj.GetType().IsValueType) // TODO: Check enum support.
-                return SetProperty(index, Engine.CreateValue(obj), (V8PropertyAttributes)(memberSecurity ?? ScriptMemberSecurity.ReadWrite));
+            {
+                var jsValue = Engine.CreateValue(obj);
+                return SetProperty(index, ref jsValue, (V8PropertyAttributes)(memberSecurity ?? ScriptMemberSecurity.ReadWrite));
+            }
+            else {
+                InternalHandle jsValue = Engine.CreateBinding(obj, className, recursive, memberSecurity);
 
-            var nObj = Engine.CreateBinding(obj, className, recursive, memberSecurity);
-
-            if (memberSecurity != null)
-                return SetProperty(index, nObj, (V8PropertyAttributes)memberSecurity);
-            else
-                return SetProperty(index, nObj);
+                if (memberSecurity != null)
+                    return SetProperty(index, ref jsValue, (V8PropertyAttributes)memberSecurity);
+                else
+                    return SetProperty(index, ref jsValue);
+            }
         }
 
         /// <summary>
@@ -1574,8 +1582,9 @@ namespace V8.Net
                 throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
 
             var func = (V8Function)Engine.CreateBinding(type, className, recursive, memberSecurity).Object;
+            var jsFunc = func._;
 
-            return SetProperty(func.FunctionTemplate.ClassName, func, propertyAttributes);
+            return SetProperty(func.FunctionTemplate.ClassName, ref jsFunc, propertyAttributes);
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -1678,7 +1687,7 @@ namespace V8.Net
             var engine = Engine;
 
             if (!(Object is V8NativeObject o)) // (we need to first get the managed object if object exists)
-                o = engine.CreateObject(this); // (create a managed object to store and keep the accessors alive)
+                o = engine.CreateObject(ref this); // (create a managed object to store and keep the accessors alive)
 
             o.SetAccessor(name, getter, setter, attributes, access);
         }
@@ -1757,7 +1766,7 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        internal InternalHandle _Call(string functionName, InternalHandle _this, params InternalHandle[] args)
+        internal InternalHandle _Call(string functionName, ref InternalHandle _this, params InternalHandle[] args)
         {
             if (!IsObjectType)
                 throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
@@ -1779,7 +1788,7 @@ namespace V8.Net
         /// Calls the specified function property on the underlying object.
         /// The '_this' parameter is the "this" reference within the function when called.
         /// </summary>
-        public InternalHandle Call(string functionName, InternalHandle _this, params InternalHandle[] args)
+        public InternalHandle Call(string functionName, ref InternalHandle _this, params InternalHandle[] args)
         {
             if (functionName.IsNullOrWhiteSpace())
                 throw new ArgumentNullException("functionName (cannot be null, empty, or only whitespace)");
@@ -1787,7 +1796,7 @@ namespace V8.Net
             if (!IsObjectType)
                 throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
 
-            return _Call(functionName, _this, args);
+            return _Call(functionName, ref _this, args);
         }
 
         /// <summary>
@@ -1802,19 +1811,20 @@ namespace V8.Net
             if (!IsObjectType)
                 throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
 
-            return _Call(functionName, InternalHandle.Empty, args);
+            var jsEmpty = InternalHandle.Empty;
+            return _Call(functionName, ref jsEmpty, args);
         }
 
         /// <summary>
         /// Calls the underlying object as a function.
         /// The '_this' parameter is the "this" reference within the function when called.
         /// </summary>
-        public InternalHandle Call(InternalHandle _this, params InternalHandle[] args)
+        public InternalHandle Call(ref InternalHandle _this, params InternalHandle[] args)
         {
             if (!IsObjectType)
                 throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
 
-            return _Call(null, _this, args);
+            return _Call(null, ref _this, args);
         }
 
         /// <summary>
@@ -1826,7 +1836,8 @@ namespace V8.Net
             if (!IsObjectType)
                 throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
 
-            return _Call(null, InternalHandle.Empty, args);
+            var jsEmpty = InternalHandle.Empty;
+            return _Call(null, ref jsEmpty, args);
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -1863,13 +1874,13 @@ namespace V8.Net
     /// Intercepts JavaScript access for properties on the associated JavaScript object for retrieving a value.
     /// <para>To allow the V8 engine to perform the default get action, return "Handle.Empty".</para>
     /// </summary>
-    public delegate InternalHandle GetterAccessor(InternalHandle _this, string propertyName);
+    public delegate InternalHandle GetterAccessor(ref InternalHandle _this, string propertyName);
 
     /// <summary>
     /// Intercepts JavaScript access for properties on the associated JavaScript object for setting values.
     /// <para>To allow the V8 engine to perform the default set action, return "Handle.Empty".</para>
     /// </summary>
-    public delegate InternalHandle SetterAccessor(InternalHandle _this, string propertyName, InternalHandle value);
+    public delegate InternalHandle SetterAccessor(ref InternalHandle _this, string propertyName, ref InternalHandle value);
     // ========================================================================================================================
 }
 

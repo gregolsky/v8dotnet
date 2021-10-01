@@ -127,7 +127,7 @@ namespace V8.Net
                 args[1] = convertParameter;
                 args[2] = Expression.Constant(V8PropertyAttributes.None);
 
-                methodInfo = ((Func<string, InternalHandle, V8PropertyAttributes, bool>)_Handle.SetProperty).Method;
+                methodInfo = ((InternalHandle.DelegateSetPropertyByName)_Handle.SetProperty).Method;
             }
             else // (no interface is implemented, so default to just 'object')
             {
@@ -260,8 +260,8 @@ namespace V8.Net
                 args[2] = Expression.Constant(V8PropertyAttributes.None);
 
                 methodInfo = indexes[0].Expression.Type == typeof(string)
-                    ? ((Func<string, InternalHandle, V8PropertyAttributes, bool>)_Handle.SetProperty).Method
-                    : ((Func<int, InternalHandle, V8PropertyAttributes, bool>)_Handle.SetProperty).Method;
+                    ? ((InternalHandle.DelegateSetPropertyByName)_Handle.SetProperty).Method
+                    : ((InternalHandle.DelegateSetPropertyByIndex)_Handle.SetProperty).Method;
             }
             else // (no interface is implemented, so default to just 'object')
             {

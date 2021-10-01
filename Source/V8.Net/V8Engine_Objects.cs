@@ -84,14 +84,6 @@ namespace V8.Net
             _RefCount = target != null ? 0 : UndefinedRefCount;
         }
 
-        public bool IsToBeKeptAlive {
-            get {
-                return false;
-            }
-            set {
-            }
-        }
-
         public int RefCount {
             get {
                 return _RefCount;
@@ -224,7 +216,7 @@ namespace V8.Net
             }
         }
 
-        internal bool _MakeObjectRooted(int objectID, object obj, InternalHandle h) // (looks up the object and attempts to make it rooted)
+        internal bool _MakeObjectRooted(int objectID, object obj, ref InternalHandle h) // (looks up the object and attempts to make it rooted)
         {
             if (objectID < 0)
                 return false;
@@ -289,7 +281,7 @@ namespace V8.Net
         /// <param name="handle">The handle to the native V8 object.</param>
         /// <param name="connectNativeObject">If true (the default), then a native function is called to associate the native V8 object with the new managed object.
         /// Set this to false if native V8 objects will be associated manually for special cases.  This parameter is ignored if no handle is given (hNObj == null).</param>
-        internal T _CreateManagedObject<T>(ITemplate template, InternalHandle handle, bool connectNativeObject = true)
+        internal T _CreateManagedObject<T>(ITemplate template, ref InternalHandle handle, bool connectNativeObject = true)
                 where T : V8NativeObject, new()
         {
             T newObject;
@@ -355,22 +347,22 @@ namespace V8.Net
         /// <param name="handle">A handle to a native object that contains a valid managed object ID.</param>
         /// <param name="createIfNotFound">If true, then an IV8NativeObject of type 'T' will be created if an existing IV8NativeObject object cannot be found, otherwise 'null' is returned.</param>
         /// <param name="initializeOnCreate">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created wrapper.</param>
-        public T GetObject<T>(InternalHandle handle, bool createIfNotFound = true, bool initializeOnCreate = true)
+        public T GetObject<T>(ref InternalHandle handle, bool createIfNotFound = true, bool initializeOnCreate = true)
             where T : V8NativeObject, new()
         {
-            return _GetObject<T>(null, handle, createIfNotFound, initializeOnCreate);
+            return _GetObject<T>(null, ref handle, createIfNotFound, initializeOnCreate);
         }
 
         /// <summary>
         /// Returns a 'V8NativeObject' or 'V8Function' object based on the handle.
         /// <see cref="GetObject&lt;T&gt;"/>
         /// </summary>
-        public V8NativeObject GetObject(InternalHandle handle, bool createIfNotFound = true, bool initializeOnCreate = true)
+        public V8NativeObject GetObject(ref InternalHandle handle, bool createIfNotFound = true, bool initializeOnCreate = true)
         {
             if (handle.IsFunction)
-                return GetObject<V8Function>(handle, createIfNotFound, initializeOnCreate);
+                return GetObject<V8Function>(ref handle, createIfNotFound, initializeOnCreate);
             else
-                return GetObject<V8NativeObject>(handle, createIfNotFound, initializeOnCreate);
+                return GetObject<V8NativeObject>(ref handle, createIfNotFound, initializeOnCreate);
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -378,7 +370,7 @@ namespace V8.Net
         /// <summary>
         /// Same as "Get_RemoveObjectRootableReferenceally for getting objects that are associated with templates (such as getting function prototype objects).
         /// </summary>
-        internal T _GetObject<T>(ITemplate template, InternalHandle handle, bool createIfNotFound = true, bool initializeOnCreate = true, bool connectNativeObject = true)
+        internal T _GetObject<T>(ITemplate template, ref InternalHandle handle, bool createIfNotFound = true, bool initializeOnCreate = true, bool connectNativeObject = true)
             where T : V8NativeObject, new()
         {
             if (handle.IsEmpty)
@@ -397,7 +389,7 @@ namespace V8.Net
             else if (createIfNotFound)
             {
                 handle.ObjectID = -1; // (managed object doesn't exist [perhaps GC'd], so reset the ID)
-                obj = _CreateObject<T>(template, handle, initializeOnCreate, connectNativeObject);
+                obj = _CreateObject<T>(template, ref handle, initializeOnCreate, connectNativeObject);
             }
 
             return obj;

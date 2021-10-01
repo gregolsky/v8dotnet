@@ -450,9 +450,9 @@ namespace V8.Net
         /// Returns true if successful.
         /// </summary>
         /// <param name="attributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
-        public virtual bool SetProperty(string name, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None)
+        public virtual bool SetProperty(string name, ref InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None)
         {
-            return _Handle.SetProperty(name, value, attributes);
+            return _Handle.SetProperty(name, ref value, attributes);
         }
 
         /// <summary>
@@ -466,9 +466,9 @@ namespace V8.Net
         ///     <para>Warning: V8 does not support setting attributes using numerical indexes.  If you set an attribute, the given
         ///     value is converted to a string, and a named property setter will be used instead. </para>
         /// </param>
-        public virtual bool SetProperty(Int32 index, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
+        public virtual bool SetProperty(Int32 index, ref InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
         {
-            return _Handle.SetProperty(index, value, attributes);
+            return _Handle.SetProperty(index, ref value, attributes);
         }
 
         /// <summary>
@@ -593,7 +593,8 @@ namespace V8.Net
                 {
                     try
                     {
-                        return getter != null ? getter(_this, _name) : null;
+                        InternalHandle jsThis = _this;
+                        return getter != null ? getter(ref jsThis, _name) : null;
                     }
                     catch (Exception ex)
                     {
@@ -606,7 +607,9 @@ namespace V8.Net
                 {
                     try
                     {
-                        return setter != null ? setter(_this, _name, _val) : null;
+                        InternalHandle jsThis = _this;
+                        InternalHandle jsVal = _val;
+                        return setter != null ? setter(ref jsThis, _name, ref jsVal) : null;
                     }
                     catch (Exception ex)
                     {
@@ -653,9 +656,9 @@ namespace V8.Net
         /// Calls an object property with a given name on a specified object as a function and returns the result.
         /// The '_this' property is the "this" object within the function when called.
         /// </summary>
-        public virtual InternalHandle Call(string functionName, InternalHandle _this, params InternalHandle[] args)
+        public virtual InternalHandle Call(string functionName, ref InternalHandle _this, params InternalHandle[] args)
         {
-            return _Handle.Call(functionName, _this, args);
+            return _Handle.Call(functionName, ref _this, args);
         }
 
         /// <summary>
@@ -670,9 +673,9 @@ namespace V8.Net
         /// Calls the underlying object as a function.
         /// The '_this' parameter is the "this" reference within the function when called.
         /// </summary>
-        public virtual InternalHandle Call(InternalHandle _this, params InternalHandle[] args)
+        public virtual InternalHandle Call(ref InternalHandle _this, params InternalHandle[] args)
         {
-            return _Handle.Call(_this, args);
+            return _Handle.Call(ref _this, args);
         }
 
         /// <summary>

@@ -20,7 +20,7 @@ namespace V8.Net
     /// <param name="isConstructCall">True only if this function is being called to construct a new object (such as using the "new" operator within JavaScript).
     /// If this is true, the function is expected to create and return a new object (as the constructor for that object).</param>
     /// <param name="args">The arguments supplied for the JavaScript function call.</param>
-    public delegate InternalHandle JSFunction(V8Engine engine, bool isConstructCall, InternalHandle _this, params InternalHandle[] args);
+    public delegate InternalHandle JSFunction(V8Engine engine, bool isConstructCall, ref InternalHandle _this, params InternalHandle[] args);
 
     // ========================================================================================================================
 
@@ -172,14 +172,15 @@ namespace V8.Net
             var result = InternalHandle.Empty;
 
             // ... get a handle to the native "this" object ...
-            using (InternalHandle hThis = _this)
+            using (InternalHandle jsThis = _this)
             {
-                V8Engine engine = hThis.Engine;
+                V8Engine engine = jsThis.Engine;
 
                 // ... call all function types (multiple custom derived function types are allowed, but only one of each type) ...
                 foreach (var callback in functions)
                 {
-                    result = callback(engine, isConstructCall, hThis, _args);
+                    var jsThisAux = jsThis;
+                    result = callback(engine, isConstructCall, ref jsThisAux, _args);
 
                     if (!result.IsEmpty) break;
                 }
@@ -191,7 +192,7 @@ namespace V8.Net
 
                 // ... make sure the user is not returning a 'V8ManagedObject' instance associated with the new object (the property interceptors will never work) ...
 
-                if (isConstructCall && obj != null && obj is V8ManagedObject && obj.InternalHandle == hThis)
+                if (isConstructCall && obj != null && obj is V8ManagedObject && obj.InternalHandle == jsThis)
                     throw new InvalidOperationException("You've attempted to return the type '" + obj.GetType().Name
                         + "' which is of type V8ManagedObject in a construction call (using 'new' in JavaScript) to wrap the new native object given to the constructor.  The native V8 engine"
                         + " only supports interceptor hooks for objects generated from ObjectTemplate instances.  You will need to first derive/implement from V8NativeObject/IV8NativeObject"
@@ -238,10 +239,10 @@ namespace V8.Net
 
             // ... get the v8 "Function" object ...
 
-            InternalHandle hNativeFunc = V8NetProxy.GetFunction(_NativeFunctionTemplateProxy);
+            InternalHandle jsNativeFunc = V8NetProxy.GetFunction(_NativeFunctionTemplateProxy);
             // ... create a managed wrapper for the V8 "Function" object (note: functions inherit the native V8 "Object" type) ...
 
-            func = _Engine._GetObject<T>(this, hNativeFunc, true, false); // (note: this will "connect" the native object [hNativeFunc] to a new managed V8Function wrapper, and set the prototype!)
+            func = _Engine._GetObject<T>(this, ref jsNativeFunc, true, false); // (note: this will "connect" the native object [jsNativeFunc] to a new managed V8Function wrapper, and set the prototype!)
             
             if (callback != null)
                 func.Callback = callback;
@@ -249,8 +250,10 @@ namespace V8.Net
             // ... get the function's prototype object, wrap it, and give it to the new function object ...
             // (note: this is a special case, because the function object auto generates the prototype object natively using an existing object template)
 
-            using (InternalHandle funcProto = V8NetProxy.GetObjectPrototype(func._Handle))
-                func._Prototype.Set(funcProto);
+            using (InternalHandle jsFuncProto = V8NetProxy.GetObjectPrototype(func._Handle)) {
+                var jsFuncProtoAux = jsFuncProto;
+                func._Prototype.Set(ref jsFuncProtoAux);
+            }
 
             lock (_FunctionsByType)
             {
@@ -326,12 +329,14 @@ namespace V8.Net
 
             // (note: the special case here is that the native function object will use its own template to create instances)
 
-            T obj = _Engine._CreateManagedObject<T>(this, null);
+            var jsEmpty = InternalHandle.Empty;
+            T obj = _Engine._CreateManagedObject<T>(this, ref jsEmpty);
             obj.Template = InstanceTemplate;
 
             try
             {
-                obj._Handle.Set(V8NetProxy.CreateInstanceFromFunctionTemplate(_NativeFunctionTemplateProxy, obj.ID, args.Length, _args));
+                InternalHandle jsObj = V8NetProxy.CreateInstanceFromFunctionTemplate(_NativeFunctionTemplateProxy, obj.ID, args.Length, _args);
+                obj._Handle.Set(ref jsObj);
                 // (note: setting '_NativeObject' also updates it's '_ManagedObject' field if necessary.
 
                 obj.Initialize(true, args);
@@ -381,7 +386,7 @@ namespace V8.Net
         /// <summary>
         /// Calls the V8 'Set()' function on the underlying native function template to set properties that will exist on all function objects created from this template.
         /// </summary>
-        public void SetProperty(string name, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
+        public void SetProperty(string name, ref InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name (cannot be null, empty, or only whitespace)");
 

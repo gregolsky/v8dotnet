@@ -15,13 +15,13 @@ namespace V8.Net
         public V8Exception(InternalHandle handle, Exception innerException)
             : base(handle.AsString, innerException)
         {
-            _Handle.Set(handle);
+            _Handle.Set(ref handle);
         }
 
         public V8Exception(InternalHandle handle)
             : base(handle.AsString)
         {
-            _Handle.Set(handle);
+            _Handle.Set(ref handle);
         }
 
         ~V8Exception() { _Handle.Dispose(); }

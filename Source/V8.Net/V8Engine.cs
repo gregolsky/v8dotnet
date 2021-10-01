@@ -464,7 +464,7 @@ namespace V8.Net
         ///     (Optional) The amount of time, in milliseconds, to delay before 'TerminateExecution()' is invoked.
         /// </param>
         /// <returns> An InternalHandle. </returns>
-        public InternalHandle Execute(InternalHandle script, bool throwExceptionOnError = false, int timeout = 0)
+        public InternalHandle Execute(ref InternalHandle script, bool throwExceptionOnError = false, int timeout = 0)
         {
             if (script.ValueType != JSValueType.Script)
                 throw new InvalidOperationException("The handle must represent pre-compiled JavaScript.");
@@ -760,16 +760,16 @@ namespace V8.Net
         /// <para>Note: </para>
         /// </summary>
         /// <typeparam name="T">The wrapper type to create (such as V8ManagedObject).</typeparam>
-        /// <param name="v8Object">A handle to a native V8 object.</param>
+        /// <param name="jsObject">A handle to a native V8 object.</param>
         /// <param name="initialize">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
-        internal T _CreateObject<T>(ITemplate template, InternalHandle v8Object, bool initialize = true, bool connectNativeObject = true)
+        internal T _CreateObject<T>(ITemplate template, ref InternalHandle jsObject, bool initialize = true, bool connectNativeObject = true)
             where T : V8NativeObject, new()
         {
-            if (!v8Object.IsObjectType)
+            if (!jsObject.IsObjectType)
                 throw new InvalidOperationException("An object handle type is required (such as a JavaScript object or function handle).");
 
             // ... create the new managed JavaScript object, store it (to get the "ID"), and connect it to the native V8 object ...
-            var obj = _CreateManagedObject<T>(template, v8Object, connectNativeObject);
+            var obj = _CreateManagedObject<T>(template, ref jsObject, connectNativeObject);
 
             if (initialize)
                 obj.Initialize(false, null);
@@ -786,18 +786,18 @@ namespace V8.Net
         /// <para>Note: </para>
         /// </summary>
         /// <typeparam name="T">The wrapper type to create (such as V8ManagedObject).</typeparam>
-        /// <param name="v8Object">A handle to a native V8 object.</param>
+        /// <param name="jsObject">A handle to a native V8 object.</param>
         /// <param name="initialize">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
-        public T CreateObject<T>(InternalHandle v8Object, bool initialize = true)
+        public T CreateObject<T>(ref InternalHandle jsObject, bool initialize = true)
             where T : V8NativeObject, new()
         {
-            return _CreateObject<T>(null, v8Object, initialize);
+            return _CreateObject<T>(null, ref jsObject, initialize);
         }
 
         /// <summary>
         /// See <see cref="CreateObject&lt;T>(InternalHandle, bool)"/>.
         /// </summary>
-        public V8NativeObject CreateObject(InternalHandle v8Object, bool initialize = true) { return CreateObject<V8NativeObject>(v8Object, initialize); }
+        public V8NativeObject CreateObject(ref InternalHandle jsObject, bool initialize = true) { return CreateObject<V8NativeObject>(ref jsObject, initialize); }
 
         /// <summary>
         /// Creates a new CLR object which will be tracked by a new V8 native object.
@@ -808,12 +808,14 @@ namespace V8.Net
             where T : V8NativeObject, new()
         {
             // ... create the new managed JavaScript object and store it (to get the "ID")...
-            var obj = _CreateManagedObject<T>(null, null);
+            var jsEmpty = InternalHandle.Empty;
+            var obj = _CreateManagedObject<T>(null, ref jsEmpty);
 
             try
             {
                 // ... create a new native object and associated it with the new managed object ID ...
-                obj._Handle.Set(new InternalHandle(V8NetProxy.CreateObject(_NativeV8EngineProxy, obj.ID), true));
+                var jsObj = new InternalHandle(V8NetProxy.CreateObject(_NativeV8EngineProxy, obj.ID), true);
+                obj._Handle.Set(ref jsObj);
 
                 /* The V8 object will have an associated internal field set to the index of the created managed object above for quick lookup.  This index is used
                  * to locate the associated managed object when a call-back occurs. The lookup is a fast O(1) operation using the custom 'IndexedObjectList' manager.
@@ -1142,8 +1144,10 @@ namespace V8.Net
                             if (!h.IsCLRDisposed) {
                                 int countParents = 0;
                                 snapshotAfter.ChildHandleIDs.TryGetValue(h.HandleID, out countParents);
-                                if (h.RefCount > refDiscount + countParents)
-                                    leakagesDescHandles += _LeakageDesc(h, true, jsStringify);                        
+                                if (h.RefCount > refDiscount + countParents) {
+                                    var jsStringifyAux = jsStringify;
+                                    leakagesDescHandles += _LeakageDesc(ref h, true, ref jsStringifyAux);
+                                }
                             }
                         }
                     }
@@ -1170,8 +1174,10 @@ namespace V8.Net
                                 int countParents = 0;
                                 snapshotAfter.ChildHandleIDs.TryGetValue(h.HandleID, out countParents);
 
-                                if (h.RefCount > refDiscount + countParents)
-                                    leakagesDescObjects += _LeakageDesc(h, true, jsStringify);                        
+                                if (h.RefCount > refDiscount + countParents) {
+                                    var jsStringifyAux = jsStringify;
+                                    leakagesDescObjects += _LeakageDesc(ref h, true, ref jsStringifyAux);
+                                }
                             }
                             else {
                                 leakagesDescObjects += $"objectID={i}\n";
@@ -1249,7 +1255,7 @@ namespace V8.Net
         }
 
 
-        private string _LeakageDesc(InternalHandle h, bool isLeaked, InternalHandle jsStringify)
+        private string _LeakageDesc(ref InternalHandle h, bool isLeaked, ref InternalHandle jsStringify)
         {
             string leakagesDesc = "";
             string summary = h.Summary;

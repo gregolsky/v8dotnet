@@ -40,7 +40,7 @@ namespace V8.Net
         /// The '_this' property is the "this" object within the function when called.
         /// <para>Note: This simply calls 'base.Call()' without a function name.</para>
         /// </summary>
-        InternalHandle Call(InternalHandle _this, params InternalHandle[] args);
+        InternalHandle Call(ref InternalHandle _this, params InternalHandle[] args);
     }
 
     /// <summary>
@@ -72,22 +72,22 @@ namespace V8.Net
         /// Calls the native side to invoke the function associated with this managed function wrapper.
         /// <para>Note: This method simply calls 'Handle.Call()' without a function name.</para>
         /// </summary>
-        public override InternalHandle StaticCall(params InternalHandle[] args) { return _Handle._Call(null, InternalHandle.Empty, args); }
+        public override InternalHandle StaticCall(params InternalHandle[] args) { var jsEmpty = InternalHandle.Empty; return _Handle._Call(null, ref jsEmpty, args); }
 
         /// <summary>
         /// Calls the native side to invoke the function associated with this managed function wrapper.
         /// The '_this' property is the "this" object within the function when called.
         /// <para>Note: This method simply calls 'Handle.Call()' without a function name.</para>
         /// </summary>
-        public override InternalHandle Call(InternalHandle _this, params InternalHandle[] args) { return _Handle._Call(null, _this, args); }
+        public override InternalHandle Call(ref InternalHandle _this, params InternalHandle[] args) { return _Handle._Call(null, ref _this, args); }
 
         /// <summary>
         /// If the function object has a function property in itself (usually considered a static property in theory), you can use this to invoke it.
         /// </summary>
-        public override InternalHandle Call(string functionName, InternalHandle _this, params InternalHandle[] args)
+        public override InternalHandle Call(string functionName, ref InternalHandle _this, params InternalHandle[] args)
         {
             if (functionName.IsNullOrWhiteSpace()) throw new ArgumentNullException("functionName (cannot be null, empty, or only whitespace)");
-            return _Handle.Call(functionName, _this, args); // (if a function name exists, then it is a request to get a property name on the object as a function [and not to use this function object itself])
+            return _Handle.Call(functionName, ref _this, args); // (if a function name exists, then it is a request to get a property name on the object as a function [and not to use this function object itself])
         }
 
         // --------------------------------------------------------------------------------------------------------------------

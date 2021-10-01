@@ -194,7 +194,7 @@ namespace V8.Net
             }
         }
 
-        public ArgInfo(V8Engine engine, InternalHandle handle, ParameterInfo paramInfo = null, Type expectedType = null)
+        public ArgInfo(V8Engine engine, ref InternalHandle handle, ParameterInfo paramInfo = null, Type expectedType = null)
         {
             Engine = engine;
             ArgInfoSource = handle;
@@ -242,7 +242,7 @@ namespace V8.Net
             }
             else if (ExpectedType == typeof(Handle))
             {
-                Value = new Handle(ArgInfoSource);
+                Value = new Handle(ref ArgInfoSource);
                 Type = typeof(Handle);
             }
             else if (ExpectedType == typeof(V8Engine))
@@ -282,8 +282,10 @@ namespace V8.Net
 
             ArgInfo[] argInfoItems = new ArgInfo[length];
 
-            for (var i = 0; i < length; i++)
-                argInfoItems[i] = new ArgInfo(engine, i < handlesLength ? handles[handlesOffset + i] : InternalHandle.Empty, expectedParameters?[i]);
+            for (var i = 0; i < length; i++) {
+                InternalHandle jsItem = i < handlesLength ? handles[handlesOffset + i] : InternalHandle.Empty;
+                argInfoItems[i] = new ArgInfo(engine, ref jsItem, expectedParameters?[i]);
+            }
 
             return argInfoItems;
         }
@@ -298,8 +300,10 @@ namespace V8.Net
 
             ArgInfo[] argInfoItems = new ArgInfo[length];
 
-            for (var i = 0; i < length; i++)
-                argInfoItems[i] = new ArgInfo(engine, i < handlesLength ? handles[handlesOffset + i] : InternalHandle.Empty, null, expectedTypes != null ? expectedTypes[i] : null);
+            for (var i = 0; i < length; i++) {
+                InternalHandle jsItem =  i < handlesLength ? handles[handlesOffset + i] : InternalHandle.Empty;
+                argInfoItems[i] = new ArgInfo(engine, ref jsItem, null, expectedTypes != null ? expectedTypes[i] : null);
+            }
 
             return argInfoItems;
         }
@@ -979,19 +983,21 @@ namespace V8.Net
             return (HandleProxy* __this, string propertyName, HandleProxy* __value) =>
             {
                 InternalHandle value = __value;
-                using (InternalHandle _this = __this)
+                using (InternalHandle jsThis = __this)
                 {
                     if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
                     if (!memberDetails.HasSecurityFlags(ScriptMemberSecurity.ReadOnly))
                     {
-                        if (_this.IsBinder)
+                        if (jsThis.IsBinder)
                         {
-                            object _value = new ArgInfo(Engine, value, null, fieldInfo.FieldType).ValueOrDefault;
+                            object _value = new ArgInfo(Engine, ref value, null, fieldInfo.FieldType).ValueOrDefault;
 
-                            if (isInternalHandleTypeExpected && _value is InternalHandle)
-                                _value = ((IHandle)fieldInfo.GetValue(_this.BoundObject)).Set((InternalHandle)_value); // (the current handle *value* must be set properly so it can be disposed before setting if need be)
+                            if (isInternalHandleTypeExpected && _value is InternalHandle) {
+                                var jsValue = (InternalHandle)_value;
+                                _value = ((IHandle)fieldInfo.GetValue(jsThis.BoundObject)).Set(ref jsValue); // (the current handle *value* must be set properly so it can be disposed before setting if need be)
+                            }
 
-                            fieldInfo.SetValue(_this.BoundObject, _value);
+                            fieldInfo.SetValue(jsThis.BoundObject, _value);
                         }
                         else
                             return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, fieldInfo.Name), JSValueType.ExecutionError);
@@ -1008,14 +1014,14 @@ namespace V8.Net
             if (isSystemType)
                 return (HandleProxy* __this, string propertyName) =>
                 {
-                    using (InternalHandle _this = __this)
+                    using (InternalHandle jsThis = __this)
                     {
                         if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
                         // (note: it's an error to read some properties in special cases on certain system type instances (such as 'Type.GenericParameterPosition'), so just ignore and return the message on system instances)
                         try
                         {
-                            if (_this.IsBinder)
-                                return Engine.CreateValue((T)fieldInfo.GetValue(_this.BoundObject));
+                            if (jsThis.IsBinder)
+                                return Engine.CreateValue((T)fieldInfo.GetValue(jsThis.BoundObject));
                             else
                                 return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, fieldInfo.Name), JSValueType.ExecutionError);
                         }
@@ -1025,11 +1031,11 @@ namespace V8.Net
             else
                 return (HandleProxy* __this, string propertyName) =>
                 {
-                    using (InternalHandle _this = __this)
+                    using (InternalHandle jsThis = __this)
                     {
                         if (memberDetails.MemberSecurity < 0) return InternalHandle.Empty;
-                        if (_this.IsBinder)
-                            return Engine.CreateValue((T)fieldInfo.GetValue(_this.BoundObject));
+                        if (jsThis.IsBinder)
+                            return Engine.CreateValue((T)fieldInfo.GetValue(jsThis.BoundObject));
                         else
                             return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, fieldInfo.Name), JSValueType.ExecutionError);
                     }
@@ -1045,21 +1051,22 @@ namespace V8.Net
                 {
                     var obj = Engine.CreateObject();
                     var msg = Engine.CreateValue($"('Recursive' was not enabled when registering type '{ClassName}', which is required to access nested classes and structs)");
-                    var valueOf = Engine.CreateFunctionTemplate("ACCESS_NOT_ALLOWED").GetFunctionObject((engine, isConstructCall, _this, args) => msg);
-                    obj.SetProperty("valueOf", valueOf, V8PropertyAttributes.Locked);
+                    var valueOf = Engine.CreateFunctionTemplate("ACCESS_NOT_ALLOWED").GetFunctionObject((V8Engine engine, bool isConstructCall, ref InternalHandle _this, InternalHandle[] args) => msg);
+                    var jsValueOf = valueOf._;
+                    obj.SetProperty("valueOf", ref jsValueOf, V8PropertyAttributes.Locked);
                     return obj;
                 };
             else if (isSystemType)
                 return (HandleProxy* __this, string propertyName) =>
                 {
-                    using (InternalHandle _this = __this)
+                    using (InternalHandle jsThis = __this)
                     {
                         if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
                         // (note: it's an error to read some properties in special cases on certain system type instances (such as 'Type.GenericParameterPosition'), so just ignore and return the message on system instances)
                         try
                         {
-                            if (_this.IsBinder)
-                                return Engine.CreateValue(fieldInfo.GetValue(_this.BoundObject), _Recursive);
+                            if (jsThis.IsBinder)
+                                return Engine.CreateValue(fieldInfo.GetValue(jsThis.BoundObject), _Recursive);
                             else
                                 return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, fieldInfo.Name), JSValueType.ExecutionError);
                         }
@@ -1069,11 +1076,11 @@ namespace V8.Net
             else
                 return (HandleProxy* __this, string propertyName) =>
                 {
-                    using (InternalHandle _this = __this)
+                    using (InternalHandle jsThis = __this)
                     {
                         if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
-                        if (_this.IsBinder)
-                            return Engine.CreateValue(fieldInfo.GetValue(_this.BoundObject), _Recursive);
+                        if (jsThis.IsBinder)
+                            return Engine.CreateValue(fieldInfo.GetValue(jsThis.BoundObject), _Recursive);
                         else
                             return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, fieldInfo.Name), JSValueType.ExecutionError);
                     }
@@ -1170,19 +1177,21 @@ namespace V8.Net
 
             return (HandleProxy* __this, string propertyName, HandleProxy* value) =>
             {
-                using (InternalHandle _this = __this)
+                using (InternalHandle jsThis = __this)
                 {
                     if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
                     if (canWrite && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.ReadOnly))
                     {
-                        if (_this.IsBinder)
+                        if (jsThis.IsBinder)
                         {
-                            object _value = new ArgInfo(Engine, value, null, propertyInfo.PropertyType).ValueOrDefault;
+                            InternalHandle jsValue = value;
+                            object _value = new ArgInfo(Engine, ref jsValue, null, propertyInfo.PropertyType).ValueOrDefault;
 
-                            if (isInternalHandleTypeExpected && canRead && _value is InternalHandle)
-                                _value = ((IHandle)propertyInfo.GetValue(_this.BoundObject, null)).Set((InternalHandle)_value); // (the current handle *value* must be set properly so it can be disposed before setting if need be)
+                            if (isInternalHandleTypeExpected && canRead && _value is InternalHandle js_value) {
+                                _value = ((IHandle)propertyInfo.GetValue(jsThis.BoundObject, null)).Set(ref js_value); // (the current handle *value* must be set properly so it can be disposed before setting if need be)
+                            }
 
-                            propertyInfo.SetValue(_this.BoundObject, _value, null);
+                            propertyInfo.SetValue(jsThis.BoundObject, _value, null);
                         }
                         else
                             return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, propertyInfo.Name), JSValueType.ExecutionError);
@@ -1200,7 +1209,7 @@ namespace V8.Net
             if (isSystemType)
                 return (HandleProxy* __this, string propertyName) =>
                 {
-                    using (InternalHandle _this = __this)
+                    using (InternalHandle jsThis = __this)
                     {
                         if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
                         if (propertyInfo.CanRead)
@@ -1208,8 +1217,8 @@ namespace V8.Net
                             // (note: it's an error to read some properties in special cases on certain system type instances (such as 'Type.GenericParameterPosition'), so just ignore and return the message on system instances)
                             try
                             {
-                                if (_this.IsBinder)
-                                    return Engine.CreateValue((T)propertyInfo.GetValue(_this.BoundObject, null));
+                                if (jsThis.IsBinder)
+                                    return Engine.CreateValue((T)propertyInfo.GetValue(jsThis.BoundObject, null));
                                 else
                                     return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, propertyInfo.Name), JSValueType.ExecutionError);
                             }
@@ -1221,13 +1230,13 @@ namespace V8.Net
             else
                 return (HandleProxy* __this, string propertyName) =>
                 {
-                    using (InternalHandle _this = __this)
+                    using (InternalHandle jsThis = __this)
                     {
                         if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
                         if (propertyInfo.CanRead)
                         {
-                            if (_this.IsBinder)
-                                return Engine.CreateValue((T)propertyInfo.GetValue(_this.BoundObject, null));
+                            if (jsThis.IsBinder)
+                                return Engine.CreateValue((T)propertyInfo.GetValue(jsThis.BoundObject, null));
                             else
                                 return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, propertyInfo.Name), JSValueType.ExecutionError);
                         }
@@ -1246,22 +1255,25 @@ namespace V8.Net
                 {
                     var obj = Engine.CreateObject();
                     var msg = Engine.CreateValue($"('Recursive' was not enabled when registering type '{ClassName}', which is required to access nested classes and structs)");
-                    var valueOf = Engine.CreateFunctionTemplate("ACCESS_NOT_ALLOWED").GetFunctionObject((engine, isConstructCall, _this, args) => msg);
-                    obj.SetProperty("valueOf", valueOf, V8PropertyAttributes.Locked);
+                    V8Function valueOf = Engine.CreateFunctionTemplate("ACCESS_NOT_ALLOWED").GetFunctionObject((V8Engine engine, bool isConstructCall, ref InternalHandle _this, InternalHandle[] args) => msg);
+                    using (var jsValueOf = valueOf._) {
+                        var jsValueOfAux = jsValueOf;
+                        obj.SetProperty("valueOf", ref jsValueOfAux, V8PropertyAttributes.Locked);
+                    }
                     return obj;
                 };
             else if (isSystemType)
                 return (HandleProxy* __this, string propertyName) =>
                 {
-                    using (InternalHandle _this = __this)
+                    using (InternalHandle jsThis = __this)
                     {
                         if (propertyInfo.CanRead)
                         {
                             // (note: it's an error to read some properties in special cases on certain system type instances (such as 'Type.GenericParameterPosition'), so just ignore and return the message on system instances)
                             try
                             {
-                                if (_this.IsBinder)
-                                    return Engine.CreateValue(propertyInfo.GetValue(_this.BoundObject, null), _Recursive);
+                                if (jsThis.IsBinder)
+                                    return Engine.CreateValue(propertyInfo.GetValue(jsThis.BoundObject, null), _Recursive);
                                 else
                                     return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, propertyInfo.Name), JSValueType.ExecutionError);
                             }
@@ -1273,12 +1285,12 @@ namespace V8.Net
             else
                 return (HandleProxy* __this, string propertyName) =>
                 {
-                    using (InternalHandle _this = __this)
+                    using (InternalHandle jsThis = __this)
                     {
                         if (propertyInfo.CanRead)
                         {
-                            if (_this.IsBinder)
-                                return Engine.CreateValue(propertyInfo.GetValue(_this.BoundObject, null), _Recursive);
+                            if (jsThis.IsBinder)
+                                return Engine.CreateValue(propertyInfo.GetValue(jsThis.BoundObject, null), _Recursive);
                             else
                                 return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, propertyInfo.Name), JSValueType.ExecutionError);
                         }
@@ -1417,12 +1429,12 @@ namespace V8.Net
             paramIndex = -1;
         }
 
-        InternalHandle _InvokeMethod(_MemberDetails memberDetails, MethodInfo soloMethod, object[] convertedArguments, ref InternalHandle _this,
+        InternalHandle _InvokeMethod(_MemberDetails memberDetails, MethodInfo soloMethod, object[] convertedArguments, ref InternalHandle jsThis,
             ArgInfo[] argInfos, TypeLibrary<MemberInfo> constructedMembers)
         {
             if (soloMethod != null)
             {
-                var result = soloMethod.Invoke(_this.BoundObject, convertedArguments);
+                var result = soloMethod.Invoke(jsThis.BoundObject, convertedArguments);
                 return soloMethod.ReturnType == typeof(void) ? InternalHandle.Empty : Engine.CreateValue(result, _Recursive);
             }
             else // ... more than one method exists (overloads) ..
@@ -1436,7 +1448,7 @@ namespace V8.Net
                 if (methodInfo == null)
                     throw new TargetInvocationException("There is no method matching the supplied parameter types ("
                         + String.Join(", ", (from t in systemTypes select GetTypeName(t)).ToArray()) + ").", null);
-                var result = methodInfo.Invoke(_this.BoundObject, convertedArguments);
+                var result = methodInfo.Invoke(jsThis.BoundObject, convertedArguments);
                 return methodInfo.ReturnType == typeof(void) ? InternalHandle.Empty : Engine.CreateValue(result, _Recursive);
             }
         }
@@ -1477,7 +1489,7 @@ namespace V8.Net
 
             var funcTemplate = Engine.CreateFunctionTemplate(methodName);
 
-            func = funcTemplate.GetFunctionObject<V8Function>((V8Engine engine, bool isConstructCall, InternalHandle _this, InternalHandle[] args) =>
+            func = funcTemplate.GetFunctionObject<V8Function>((V8Engine engine, bool isConstructCall, ref InternalHandle jsThis, InternalHandle[] args) =>
             {
                 if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
                 if (isConstructCall) return Engine.CreateError("Objects cannot be constructed from this function.", JSValueType.ExecutionError); // TODO: Test.
@@ -1490,8 +1502,8 @@ namespace V8.Net
 
                 try
                 {
-                    //?if (memberDetails.BindingMode == BindingMode.Instance && !_this.IsBinder)
-                    if (!_this.IsBinder)
+                    //?if (memberDetails.BindingMode == BindingMode.Instance && !jsThis.IsBinder)
+                    if (!jsThis.IsBinder)
                         return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "function", methodName, memberDetails.MemberName), JSValueType.ExecutionError);
 
                     // ... translate the generic arguments, if applicable ...
@@ -1505,7 +1517,7 @@ namespace V8.Net
 
                     // ... invoke the method ...
 
-                    return _InvokeMethod(memberDetails, soloMethod, convertedArguments, ref _this, argInfos, constructedMembers);
+                    return _InvokeMethod(memberDetails, soloMethod, convertedArguments, ref jsThis, argInfos, constructedMembers);
                 }
                 catch (Exception ex)
                 {
@@ -1527,8 +1539,10 @@ namespace V8.Net
             });
 
             var sigCount = 1;
-            foreach (var m in memberDetails.MethodMembers)
-                func.SetProperty("$__Signature" + (sigCount++), Engine.CreateValue(GetMethodSignatureAsText(m)), V8PropertyAttributes.Locked);
+            foreach (var m in memberDetails.MethodMembers) {
+                var jsValue = Engine.CreateValue(GetMethodSignatureAsText(m));
+                func.SetProperty("$__Signature" + (sigCount++), ref jsValue, V8PropertyAttributes.Locked);
+            }
 
             return true;
         }
@@ -1552,7 +1566,7 @@ namespace V8.Net
             if (expectedParameters != null)
                 convertedArgumentArrayCache[expectedParameters.Length] = new object[expectedParameters.Length];
 
-            TypeFunction = TypeTemplate.GetFunctionObject<TypeBinderFunction>((engine, isConstructCall, _this, args) =>
+            TypeFunction = TypeTemplate.GetFunctionObject<TypeBinderFunction>((V8Engine engine, bool isConstructCall, ref InternalHandle _this, InternalHandle[] args) =>
             {
                 InternalHandle handle;
                 uint argOffset = 0;
@@ -1583,7 +1597,7 @@ namespace V8.Net
 
                             // ... set the prototype of the new instance (created from an object template) to maintain the prototype chain ...
 
-                            //handle.SetProperty("__proto__", _this); // TODO: Really, accessor hooks on the function instance template needs to be used with the object binder.
+                            //handle.SetProperty("__proto__", jsThis); // TODO: Really, accessor hooks on the function instance template needs to be used with the object binder.
 
                             //??if (soloConstructor != null)
                             //{
@@ -1596,7 +1610,7 @@ namespace V8.Net
                             //    if (methodInfo == null)
                             //        throw new TargetInvocationException("There is no method matching the supplied parameter types ("
                             //            + String.Join(", ", (from t in systemTypes select GetTypeName(t)).ToArray()) + ").", null);
-                            //    var result = methodInfo.Invoke(_this.BoundObject, convertedArguments);
+                            //    var result = methodInfo.Invoke(jsThis.BoundObject, convertedArguments);
                             //    return methodInfo.ReturnType == typeof(void) ? InternalHandle.Empty : Engine.CreateValue(result, _Recursive);
                             //}
                         }
@@ -1623,9 +1637,14 @@ namespace V8.Net
                             return Engine.CreateError("You cannot pass more than one argument.", JSValueType.ExecutionError);
 
                         handle = Engine.CreateObject(/*Int32.MinValue + TypeID*/);
-                        handle.SetProperty("$__Type", Engine.CreateValue(BoundType.AssemblyQualifiedName), V8PropertyAttributes.Locked);
-                        handle.SetProperty("$__TypeID", Engine.CreateValue(TypeID), V8PropertyAttributes.Locked);
-                        handle.SetProperty("$__Value", args.Length > 0 ? args[0] : InternalHandle.Empty, V8PropertyAttributes.DontDelete);
+                        var jsType = Engine.CreateValue(BoundType.AssemblyQualifiedName);
+                        handle.SetProperty("$__Type", ref jsType, V8PropertyAttributes.Locked);
+
+                        var jsTypeID = Engine.CreateValue(TypeID);
+                        handle.SetProperty("$__TypeID", ref jsTypeID, V8PropertyAttributes.Locked);
+
+                        var jsValue = args.Length > 0 ? args[0] : InternalHandle.Empty;
+                        handle.SetProperty("$__Value", ref jsValue, V8PropertyAttributes.DontDelete);
                     }
                     catch (Exception ex)
                     {
@@ -1687,9 +1706,11 @@ namespace V8.Net
                             V8NetProxy.SetObjectAccessor(TypeFunction, TypeFunction.Object.ID, member.MemberName, member.Getter, member.Setter, V8AccessControl.Default, propertyAttribs);
                             //TypeFunction.SetAccessor(member.MemberName, member.Getter, member.Setter, propertyAttribs); // TODO: Investigate need to add access control value.
                             break;
-                        case MemberTypes.Method:
-                            TypeFunction.SetProperty(member.MemberName, member.Method, propertyAttribs); // TODO: Investigate need to add access control value.
+                        case MemberTypes.Method: {
+                            var jsMethod = member.Method._;
+                            TypeFunction.SetProperty(member.MemberName, ref jsMethod, propertyAttribs); // TODO: Investigate need to add access control value.
                             break;
+                        }
                     }
                 }
             }
@@ -1977,16 +1998,16 @@ namespace V8.Net
             else
                 return InternalHandle.Empty;
         }
-        public override InternalHandle IndexedPropertySetter(int index, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
+        public override InternalHandle IndexedPropertySetter(int index, ref InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
         {
             if (TypeBinder.Indexer == null)
             {
                 // ... there is no indexer, but there might be a property with the index name, so look for that when no indexers (i.e. 'this[]') exist ...
                 var strIndex = index.ToString();
-                return NamedPropertySetter(ref strIndex, value, attributes);
+                return NamedPropertySetter(ref strIndex, ref value, attributes);
             }
             else if (TypeBinder.Indexer.CanWrite)
-                TypeBinder.Indexer.SetValue(_Object, new ArgInfo(Engine, value, null, TypeBinder.Indexer.PropertyType).ValueOrDefault, new object[] { index });
+                TypeBinder.Indexer.SetValue(_Object, new ArgInfo(Engine, ref value, null, TypeBinder.Indexer.PropertyType).ValueOrDefault, new object[] { index });
 
             return IndexedPropertyGetter(index);
         }
@@ -2062,7 +2083,7 @@ namespace V8.Net
             return InternalHandle.Empty;
         }
 
-        public override InternalHandle NamedPropertySetter(ref string propertyName, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
+        public override InternalHandle NamedPropertySetter(ref string propertyName, ref InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
         {
             var memberDetails = TypeBinder._Members.GetValueOrDefault(propertyName);
             if (memberDetails != null && memberDetails.BindingMode == BindingMode.Instance && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.NoAcccess)) // (if undefined = no access)
