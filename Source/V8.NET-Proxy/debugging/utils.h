@@ -55,6 +55,7 @@ static std::string getExceptionMessage(v8::Isolate* isolate, const v8::Local<v8:
 static bool compileScript(const v8::Local<v8::Context>& context, const v8::Local<v8::String> &source, const std::string &filePath, v8::Local<v8::Script> &script, const v8::TryCatch &tryCatch) {
     const auto isolate_ = context->GetIsolate();
     v8::ScriptOrigin scriptOrigin = v8::ScriptOrigin(
+            isolate_,
             v8::String::NewFromUtf8(
                     isolate_,
                     ("file://" + filePath).c_str(),
