@@ -3,16 +3,16 @@ set(CMAKE_SYSTEM_NAME Windows)
 set(CMAKE_SYSTEM_VERSION 1)
 set(CMAKE_SYSTEM_PROCESSOR x86_64)
 set(TARGET_ARCH x86_64-w64-mingw32)
-
-set(CMAKE_LIBRARY_ARCHITECTURE ${target_arch} CACHE STRING "" FORCE)
+set(CMAKE_LIBRARY_ARCHITECTURE ${TARGET_ARCH} CACHE STRING "" FORCE)
 
 # which compilers to use
-#set(CMAKE_C_COMPILER     "${TARGET_ARCH}-gcc")
-#set(CMAKE_CXX_COMPILER   "${TARGET_ARCH}-g++")
-find_program(CMAKE_C_COMPILER ${target_arch}-gcc)
-find_program(CMAKE_CXX_COMPILER ${target_arch}-g++)
+# https://stackoverflow.com/questions/17242516/mingw-w64-threads-posix-vs-win32
+set(CMAKE_C_COMPILER     "${TARGET_ARCH}-gcc-posix")
+set(CMAKE_CXX_COMPILER   "${TARGET_ARCH}-g++-posix")
+#find_program(CMAKE_C_COMPILER ${TARGET_ARCH}-gcc)
+#find_program(CMAKE_CXX_COMPILER ${TARGET_ARCH}-g++)
 if(NOT CMAKE_C_COMPILER OR NOT CMAKE_CXX_COMPILER)
-    message(FATAL_ERROR "Can't find suitable C/C++ cross compiler for ${target_arch}")
+    message(FATAL_ERROR "Can't find suitable C/C++ cross compiler for ${TARGET_ARCH}")
 endif()
 
 

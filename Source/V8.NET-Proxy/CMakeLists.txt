@@ -4,33 +4,38 @@ cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
 project(V8_Net_Proxy) # <-- This defines many internal CMake variables, required for other commands.
 
+message("Loaded toolchain ${CMAKE_TOOLCHAIN_FILE}.")
+
 set (MSCPlatformToolset 200)
 
 # TODO: Make a variable for holding the path to the V8 source. 
 # installed clang and set it as the default compiler
 # installed sudo apt-get install libc++-dev 
 
-set(BOOST_BEAST_INCLUDE "usr/include" PATH "Path to the Boost.Beast include dir." )
+# if(NOT BOOST_BEAST_INCLUDE)
+#     set(BOOST_BEAST_INCLUDE "/build/boost")
+# endif()
 
 include_directories(
     V8/v8/
     V8/v8/include
     debugging/
-    #V8/v8/outecho .gn/x64.release/obj/third_party/icu
-    #V8/v8/out.gn/x64.release/obj/src/inspector
-    #V8/v8/out.gn/x64.release/obj
-    #V8/v8/out.gn/x64.release/gen
 )
 
 FIND_PACKAGE(PkgConfig)
 PKG_CHECK_MODULES(GLIB glib-2.0)
 include_directories(
     ${GLIB_INCLUDE_DIRS} 
-    ${BOOST_BEAST_INCLUDE}
 )
 link_directories(${GLIB_LIBRARY_DIRS})
 add_definitions(${GLIB_CFLAGS_OTHER})
 
+set(LIBBOOST_INCLUDE_DIRS /build)
+include_directories(
+    ${LIBBOOST_INCLUDE_DIRS}
+)
+#link_directories(${LIBBOOST_LIBRARY_DIRS})
+#add_definitions(${LIBBOOST_CFLAGS_OTHER})
 
 add_compile_options("-fms-extensions")
 
@@ -92,8 +97,11 @@ message("${PROJECT_NAME}: CURR BIN DIR: ${CMAKE_CURRENT_BINARY_DIR}")
 set(LIBV8
     v8_monolith
 )
+
+message("${CMAKE_SYSTEM_NAME} ${CMAKE_SYSTEM_PROCESSOR} ${TARGET_ARCH}")
+
 link_directories(
-    V8/v8/out.gn/x64.release.sample/obj/
+    "V8/v8/out.gn/${TARGET_PLATFORM}.release/obj/"
 )
 
 FILE(GLOB DEBUGGING_H "./debugging/*.h")
@@ -139,18 +147,17 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif()
 
 if(NOT MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
    endif()
 endif(NOT MSVC)
 
-
 # Preprocessor definitions
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(${PROJECT_NAME} PRIVATE 
-   -D_MSC_PLATFORM_TOOLSET=${MSCPlatformToolset}
-   -D_ITERATOR_DEBUG_LEVEL=0 
+   -D _ITERATOR_DEBUG_LEVEL=0 
+   -D _MSC_PLATFORM_TOOLSET=${MSCPlatformToolset}
    -DDEBUG 
     )
     if(MSVC)
@@ -160,7 +167,7 @@ endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     target_compile_definitions(${PROJECT_NAME} PRIVATE 
-   -D_MSC_PLATFORM_TOOLSET=${MSCPlatformToolset}
+    -D _MSC_PLATFORM_TOOLSET=${MSCPlatformToolset}
     )
     if(MSVC)
         target_compile_options(${PROJECT_NAME} PRIVATE  /W3 /GL /Oi /Gy /Zi)

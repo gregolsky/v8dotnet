@@ -165,3 +165,6 @@ $RECYCLE.BIN/
 /V8.Net.VC.VC.opendb
 /V8.Net.VC.db
 /.vs/V8.Net/v15
+
+artifacts
+*.tar.bz2
