@@ -15,6 +15,7 @@ if(NOT CMAKE_C_COMPILER OR NOT CMAKE_CXX_COMPILER)
     message(FATAL_ERROR "Can't find suitable C/C++ cross compiler for ${TARGET_ARCH}")
 endif()
 
+set(LIB_RT_DL_DIR "/usr/x86_64-w64-mingw32/lib")
 
 set(CMAKE_FIND_ROOT_PATH "/usr/${TARGET_ARCH}")
 

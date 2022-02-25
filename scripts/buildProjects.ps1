@@ -50,6 +50,7 @@ function BuildV8NetProxy ( $srcPath, $buildType ) {
     cmake -Bbuild/win64 -GNinja `
         -D CMAKE_TOOLCHAIN_FILE=./cmake/Toolchain_win64_l4t.cmake `
         -D CMAKE_BUILD_TYPE="$buildType" `
+        -D TARGET_PLATFORM="windows-x64" `
         -S.
     CheckLastExitCode
     write-host "----------ninja"

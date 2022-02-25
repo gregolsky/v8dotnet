@@ -31,7 +31,9 @@ PKG_CHECK_MODULES(GLIB glib-2.0)
 include_directories(
     ${GLIB_INCLUDE_DIRS} 
 )
-link_directories(${GLIB_LIBRARY_DIRS})
+
+link_directories(${GLIB_LIBRARY_DIRS} ${LIB_RT_DL_DIR})
+
 add_definitions(${GLIB_CFLAGS_OTHER})
 
 set(LIBBOOST_INCLUDE_DIRS /build)
@@ -60,7 +62,13 @@ set(OUTPUT_RELEASE ../bin/netstandard/Release/)
 
 
 #g++ -I. -Iinclude samples/hello-world.cc -o hello_world -lv8_monolith -Lout.gn/x64.release.sample/obj/ -pthread -lrt -ldl -std=c++14 -DV8_COMPRESS_POINTERS
+if(NOT ${TARGET_PLATFORM} STREQUAL "windows-x64")
 SET(GCC_COVERAGE_COMPILE_FLAGS "-shared -fPIC -pthread -lrt -ldl -std=c++14 -DV8_COMPRESS_POINTERS")
+endif()
+
+if(${TARGET_PLATFORM} STREQUAL "windows-x64")
+SET(GCC_COVERAGE_COMPILE_FLAGS "-shared -fPIC -pthread -lws2_32 -std=c++14 -DV8_COMPRESS_POINTERS")
+endif()
 
 
 ################# CMake Project ############################
@@ -104,6 +112,9 @@ set(LIBV8
 
 message("${CMAKE_SYSTEM_NAME} ${CMAKE_SYSTEM_PROCESSOR} ${TARGET_ARCH}")
 
+if(NOT TARGET_PLATFORM)
+  message(FATAL_ERROR "TARGET_PLATFORM is required")
+endif()
 link_directories(
     "V8/v8/out.gn/${TARGET_PLATFORM}.release/obj/"
 )
