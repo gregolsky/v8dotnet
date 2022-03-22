@@ -7,6 +7,7 @@ namespace V8.NET_Console_NetCore
     {
         static void Main(string[] args)
         {
+            Console.WriteLine(System.Environment.CurrentDirectory);
             try
             {
                 //var engine = new V8Engine();

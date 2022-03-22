@@ -1,4 +1,5 @@
 is_debug = false
+target_os = "windows"
 target_cpu = "x64"
 treat_warnings_as_errors = false
 is_component_build = false

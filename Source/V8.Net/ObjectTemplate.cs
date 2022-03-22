@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using V8.Net.Proxy;
 
 #if V2 || V3 || V3_5
 #else

@@ -62,8 +62,9 @@
 #pragma comment(lib, "v8_libbase.lib")
 #pragma comment(lib, "v8_libplatform.lib")
 #pragma comment(lib, "v8_libsampler.lib")
-*/#pragma comment(lib, "third_party/icu/icuuc.lib")
-#pragma comment(lib, "third_party/icu/icui18n.lib")
+*/
+//#pragma comment(lib, "third_party/icu/icuuc.lib")
+//#pragma comment(lib, "third_party/icu/icui18n.lib")
 #pragma comment(lib, "src/inspector/inspector.lib")
 
 #pragma comment(lib, "winmm.lib")

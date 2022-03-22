@@ -3,3 +3,5 @@
 /v8/build
 /v8/old
 /v8/src/*
+.gclient*
+.cipd
