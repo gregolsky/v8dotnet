@@ -63,27 +63,24 @@
     ".NETFramework,Version=v4.0": []
   },
   "packageFolders": {
-    "/root/.nuget/packages/": {}
+    "C:\\Users\\grego\\.nuget\\packages\\": {}
   },
   "project": {
     "restore": {
-      "projectUniqueName": "/home/shlomo/work/projects/v8dotnet/Source/V8.NET-Proxy/V8.Net-Proxy-x64.vcxproj",
+      "projectUniqueName": "C:\\work\\v8dotnet\\Source\\V8.NET-Proxy\\V8.Net-Proxy-x64.vcxproj",
       "projectName": "V8.Net-Proxy-x64",
-      "projectPath": "/home/shlomo/work/projects/v8dotnet/Source/V8.NET-Proxy/V8.Net-Proxy-x64.vcxproj",
-      "projectJsonPath": "/home/shlomo/work/projects/v8dotnet/Source/V8.NET-Proxy/project.json",
-      "packagesPath": "/root/.nuget/packages/",
+      "projectPath": "C:\\work\\v8dotnet\\Source\\V8.NET-Proxy\\V8.Net-Proxy-x64.vcxproj",
+      "projectJsonPath": "C:\\work\\v8dotnet\\Source\\V8.NET-Proxy\\project.json",
+      "packagesPath": "C:\\Users\\grego\\.nuget\\packages\\",
+      "outputPath": "C:\\work\\v8dotnet\\Source\\V8.NET-Proxy\\obj\\",
       "projectStyle": "ProjectJson",
-      "validateRuntimeAssets": true,
       "configFilePaths": [
-        "/root/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\grego\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
-      },
-      "frameworks": {
-        "net40": {
-          "projectReferences": {}
-        }
       }
     },
     "dependencies": {

@@ -62,7 +62,7 @@ if ($Debug.IsPresent) {
 }
 
 $PROJECT_DIR = Get-ScriptDirectory
-$RELEASE_DIR = [io.path]::combine($PROJECT_DIR, "artifacts")
+$env:RELEASE_DIR = $RELEASE_DIR = [io.path]::combine($PROJECT_DIR, "artifacts")
 $OUT_DIR = [io.path]::combine($PROJECT_DIR, "artifacts")
 
 $V8DOTNET_SRC_DIR = [io.path]::combine($PROJECT_DIR, "Source", "V8.Net")
@@ -172,6 +172,9 @@ InitGlobals $Debug $NoBundling
 if ($JustStudio -eq $False) {
     BuildV8NetProxy $V8NET_PROXY_SRC_DIR $BUILD_TYPE
     BuildV8DotNet $V8DOTNET_PROJ_PATH $BUILD_TYPE
+
+    ls -R /build/artifacts
+    ls -R /build/build
 
     #BuildV8NetTest $TEST_ASPDOTNET_PROJ_PATH $BUILD_TYPE
     #BuildV8NetTest $TEST_V8NET_CONSOLE_PROJ_PATH $BUILD_TYPE

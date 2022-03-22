@@ -17,6 +17,7 @@ using System.Security.Permissions;
 using System.Text;
 using System.Threading;
 using System.Web;
+using V8.Net.Proxy;
 
 namespace V8.Net
 {

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
-    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
+    <TargetFrameworks>net6.0</TargetFrameworks>
     <RootNamespace>V8.Net</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssemblyName>V8.Net</AssemblyName>
@@ -33,12 +33,8 @@ Supports .Net Standard 2.0+ and .Net 461+.  A project in the repo also supports 
     <FileVersion>1.1.9.0</FileVersion>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+  <PropertyGroup>
     <DefineConstants>$(DefineConstants);NETCORE;NETSTANDARD2_0</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net461'">
-    <DefineConstants>$(DefineConstants);NETFULL;NET461</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -73,7 +69,6 @@ Supports .Net Standard 2.0+ and .Net 461+.  A project in the repo also supports 
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="Proxy\GeneratedExterns\Generate32BitExterns.tt~" />
     <None Remove="VersionUpdater.dll" />
   </ItemGroup>
 
@@ -101,39 +96,10 @@ Supports .Net Standard 2.0+ and .Net 461+.  A project in the repo also supports 
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Proxy\GeneratedExterns\Generate32BitExterns.log">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Generate32BitExterns.tt</DependentUpon>
-    </None>
-    <None Update="Proxy\GeneratedExterns\Generate32BitExterns.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Generate32BitExterns.log</LastGenOutput>
-    </None>
-    <None Update="Proxy\GeneratedExterns\Generate32BitExterns1.log">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Generate32BitExterns1.cs</LastGenOutput>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Update="Proxy\GeneratedExterns\Generate32BitExterns.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Generate32BitExterns.tt~</DependentUpon>
-    </Compile>
-    <Compile Update="Proxy\GeneratedExterns\Generate32BitExterns1.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Generate32BitExterns1.log</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <Target Name="CopyNativeFiles" AfterTargets="AfterBuild">
+  <!--<Target Name="CopyNativeFiles" AfterTargets="AfterBuild">
     <ItemGroup>
       <NativeFiles Include="..\bin\netstandard\$(Configuration)\*V8_Net_Proxy_*" />
     </ItemGroup>
@@ -149,7 +115,7 @@ Supports .Net Standard 2.0+ and .Net 461+.  A project in the repo also supports 
     <Message Text="Copying native files for publish ..." Importance="High" />
     <Copy SourceFiles="@(NativeFiles)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
     <Message Text="Done copying native files for publish." Importance="High" />
-  </Target>
+  </Target>-->
 
   <!--Target Name="PushPackageToLocal" AfterTargets="Pack">
     <Exec Command="dotnet nuget push &quot;$(MSBuildProjectDirectory)\..\bin\netstandard\$(Configuration)\$(AssemblyName).$(Version).nupkg&quot; -s &quot;C:\Data\Visual Studio\Nuget Server\$(Configuration)&quot;" />
@@ -162,5 +128,5 @@ Supports .Net Standard 2.0+ and .Net 461+.  A project in the repo also supports 
         DestinationFiles="@(ExtraContent->'$(TargetDir)\%(RecursiveDir)%(Filename)%(Extension)')"
         SkipUnchangedFiles="true" />
   </Target>-->
-  
+
 </Project>

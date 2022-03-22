@@ -1,0 +1,11 @@
+FROM mcr.microsoft.com/powershell
+
+RUN apt update \
+  && apt install -y git curl build-essential cmake unzip sudo python3
+
+WORKDIR /build
+RUN git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git 
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 PATH=/build/depot_tools:/opt/dotnet:$PATH
+RUN rm -rf v8 && fetch v8
+
+CMD bash

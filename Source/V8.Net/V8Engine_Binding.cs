@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Runtime.CompilerServices;
 using System.Diagnostics;
+using V8.Net.Proxy;
 
 #if !(V1_1 || V2 || V3 || V3_5)
 using System.Dynamic;

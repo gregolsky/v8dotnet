@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp2.2;net461</TargetFrameworks>
+    <TargetFrameworks>net6.0</TargetFrameworks>
     <RootNamespace>V8.NET_Console_NetCore</RootNamespace>
     <AssemblyVersion>1.0.0.6</AssemblyVersion>
     <FileVersion>1.0.0.6</FileVersion>
@@ -14,7 +14,7 @@
 
   <Target Name="CopyNativeFiles" AfterTargets="AfterBuild">
     <ItemGroup>
-      <NativeFiles Include="..\..\Source\bin\$(Configuration)\V8_Net_Proxy_x*.*" />
+      <NativeFiles Include="..\Source\bin\$(Configuration)\V8_Net_Proxy_x*.*" />
     </ItemGroup>
     <Message Text="Copying native files ..." Importance="High" />
     <Copy SourceFiles="@(NativeFiles)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />

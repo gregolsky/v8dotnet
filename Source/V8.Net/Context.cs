@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Dynamic;
+using V8.Net.Proxy;
 
 namespace V8.Net
 {

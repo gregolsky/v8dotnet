@@ -1,0 +1,2 @@
+wget -O "assets\depot_tools.zip" https://storage.googleapis.com/chrome-infra/depot_tools.zip 
+wget -O "assets\boost.tar.bz2" https://boostorg.jfrog.io/artifactory/main/release/1.78.0/source/boost_1_78_0.tar.bz2
