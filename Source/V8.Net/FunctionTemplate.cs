@@ -232,7 +232,10 @@ namespace V8.Net
                 {
                     func = _Engine._GetExistingObject(funcID) as V8Function;
                     if (func != null)
+                    {
+                        func._.CheckConsistency(prefixOpt: "after _GetExistingObject");
                         return (T)func;
+                    }
                 }
             }
 
@@ -242,6 +245,7 @@ namespace V8.Net
             // ... create a managed wrapper for the V8 "Function" object (note: functions inherit the native V8 "Object" type) ...
 
             func = _Engine._GetObject<T>(this, hNativeFunc, true, false); // (note: this will "connect" the native object [hNativeFunc] to a new managed V8Function wrapper, and set the prototype!)
+            func._.CheckConsistency(prefixOpt: "after _GetObject");
             
             if (callback != null)
                 func.Callback = callback;
@@ -261,7 +265,9 @@ namespace V8.Net
                 _FunctionsByType[typeof(T)] = func.ID; // (this exists to index functions by type)
             }
 
+            func._.CheckConsistency(prefixOpt: "before Initialize");
             func.Initialize(false, null);
+            func._.CheckConsistency(prefixOpt: "after Initialize");
 
             return (T)func;
         }
