@@ -1,4 +1,4 @@
-/* All V8.NET source is governed by the LGPL licensing model. Please keep these comments intact, thanks.
+﻿/* All V8.NET source is governed by the LGPL licensing model. Please keep these comments intact, thanks.
  * Developer: James Wilkins (jameswilkins.net).
  * Source, Documentation, and Support: https://v8dotnet.codeplex.com
  */
@@ -1127,8 +1127,18 @@ namespace V8.Net
 
         public void AddToLastMemorySnapshotBefore(InternalHandle h)
         {
-            if (IsMemoryChecksOn)
-                LastMemorySnapshotBefore?.Add(h);
+            if (!IsMemoryChecksOn || LastMemorySnapshotBefore == null)
+                return;
+
+            LastMemorySnapshotBefore.Add(h);
+        }
+
+        public void RemoveFromLastMemorySnapshotBefore(InternalHandle h)
+        {
+            if (!IsMemoryChecksOn || LastMemorySnapshotBefore == null)
+                return;
+
+            LastMemorySnapshotBefore.Remove(h);
         }
 
         public MemorySnapshot MakeMemorySnapshot(string name)
@@ -1219,7 +1229,7 @@ namespace V8.Net
 
                 foreach (var i in snapshotAfter.ExistingObjectIDs)
                 {
-                    V8NativeObject no = _GetExistingObject(i);
+                    V8NativeObject no = _GetExistingObject(i, checkForNull: false);
                     bool isLeaked = no != null && !snapshotBefore.ExistingObjectIDs.Contains(i);
                     if (isLeaked) {
                         InternalHandle h = InternalHandle.Empty;
