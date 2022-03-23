@@ -1639,7 +1639,7 @@ namespace V8.Net
             TypeFunction._BindingMode = BindingMode.Static;
             TypeFunction.TypeBinder = this;
 
-
+            TypeFunction._.CheckConsistency();
             Engine.AddToMemorySnapshots(TypeFunction._);
 
             // TODO: Consolidate the below with the template version above (see '_ApplyBindingToTemplate()').
@@ -2261,6 +2261,7 @@ namespace V8.Net
                 if (memberSecurity != null)
                     binder._DefaultMemberSecurity = memberSecurity;
 
+                binder.TypeFunction._.CheckConsistency();
                 return binder;
             }
             else
@@ -2312,7 +2313,9 @@ namespace V8.Net
         public InternalHandle CreateBinding(Type type, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null)
         {
             var typeBinder = RegisterType(type, className, recursive, memberSecurity);
-            return typeBinder.TypeFunction._;
+            var res = typeBinder.TypeFunction._;
+            res.CheckConsistency();
+            return res;
         }
 
         /// <summary>
