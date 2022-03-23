@@ -164,8 +164,17 @@ namespace V8.Net
 
         public void Add(InternalHandle h)
         {
-            ExistingHandleIDs.Add(h.HandleID);
-            ExistingObjectIDs.Add(h.ObjectID);
+            if (ExistingHandleIDs.LastIndexOf(h.HandleID) < 0)
+                ExistingHandleIDs.Add(h.HandleID);
+            if (h.ObjectID != -1 && ExistingObjectIDs.LastIndexOf(h.ObjectID) < 0)
+                ExistingObjectIDs.Add(h.ObjectID);
+        }
+
+        public void Remove(InternalHandle h)
+        {
+            ExistingHandleIDs.Remove(h.HandleID);
+            if (h.ObjectID != -1)
+                ExistingObjectIDs.Remove(h.ObjectID);
         }
     }
 }

@@ -130,11 +130,12 @@ namespace V8.Net
                     return null;
 
                 var jsRes = mo.NamedPropertyGetter(ref propertyName).KeepAlive();
+                jsRes.CheckConsistency();
                 int minRefCount = 1 + (jsRes.IsRooted ? 1 : 0);
                 if (jsRes.RefCount >= minRefCount)
                 {
-                    jsRes.Dec(); // [shlomo]
-                    return jsRes;
+                    using (jsRes) // [shlomo]
+                        return jsRes;
                 }
                 else
                 {
