@@ -204,13 +204,15 @@ namespace V8.Net
             }
         }
 
-        internal V8NativeObject _GetExistingObject(int objectID) // (performs the object lookup in a lock block without causing a GC reset)
+        internal V8NativeObject _GetExistingObject(int objectID, bool checkForNull = true) // (performs the object lookup in a lock block without causing a GC reset)
         {
             if (objectID < 0)
                 return null;
 
             using (_ObjectsLocker.ReadLock()) { 
                 var rootableRef = _Objects[objectID]; 
+                if (checkForNull && rootableRef == null)
+                    throw new InvalidOperationException($"Rootable ref is null for object {objectID}");
                 return (V8NativeObject)rootableRef?.Target; 
             }
         }
@@ -225,9 +227,13 @@ namespace V8.Net
     //#if DEBUG
                     // RootedHandle is to be empty here
                     var rootableRef = _Objects[objectID]; 
-                    if (rootableRef != null && !rootableRef.RootedHandle.IsEmpty) {
-                        throw new InvalidOperationException($"Attempt to remove rooted object: some Inc have been missed or extra Dec has been peformed: objectID={objectID}");
+                    if (rootableRef != null) 
+                    {
+                        if (!rootableRef.RootedHandle.IsEmpty)
+                            throw new InvalidOperationException($"Attempt to remove non empty object: some Inc have been missed or extra Dec has been peformed: objectID={objectID}");
                     }
+                    else
+                        throw new InvalidOperationException($"Rootable ref is null for object {objectID}");
     //#endif
                     _Objects.Remove(objectID);
                 }
@@ -252,13 +258,17 @@ namespace V8.Net
 
             using (_ObjectsLocker.ReadLock()) { 
                 var rootableRef = _Objects[objectID]; 
-                if (rootableRef != null && rootableRef.RootedHandle.IsEmpty) { 
-                    rootableRef.RootedHandle = new InternalHandle(ref h, true);
+                if (rootableRef != null) {
+                    if (rootableRef.RootedHandle.IsEmpty)
+                        rootableRef.RootedHandle = new InternalHandle(ref h, true);
+                    else
+                        throw new InvalidOperationException($"Rootable ref handle is not empty: {rootableRef.RootedHandle.Summary}");
                 } 
                 else {
-                    return false; 
+                    throw new InvalidOperationException($"Rootable ref is null for object {objectID}");
                 }
             }
+            h.CheckConsistency(true);
             return true; 
         }
 
@@ -276,24 +286,22 @@ namespace V8.Net
             using (_ObjectsLocker.ReadLock()) { 
                 var rootableRef = _Objects[objectID]; 
                 if (rootableRef != null) { 
-                    if (!rootableRef.RootedHandle.IsEmpty) { 
-                        h = rootableRef.RootedHandle;
+                    h = rootableRef.RootedHandle;
+                    if (!h.IsEmpty) { 
                         rootableRef.RootedHandle = InternalHandle.Empty;
                     }
                     else {
+                        h.CheckConsistency(false);
                         return true;
                     }
                 } 
                 else {
-                    return false; 
+                    throw new InvalidOperationException($"Rootable ref is null for object {objectID}");
                 }
             }
-            if (!h.IsEmpty) {
-                return h.TryDispose();
-            }
-            else {
-                return true;
-            }
+            bool res = h.TryDispose();
+            h.CheckConsistency(false);
+            return res;
         }
 
         // --------------------------------------------------------------------------------------------------------------------
