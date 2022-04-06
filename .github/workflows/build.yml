@@ -1,0 +1,49 @@
+name: Build V8.NET 
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+env:
+  V8_BUILD_URL: https://github.com/gregolsky/v8-monolith-builds/releases/download/v9.9.115.9/v8-out-PLATFORM.zip
+
+jobs:
+  build_v8netproxy_linux_x64:
+    name: Build for V8.NET Proxy for ${{ matrix.config.platform }} 
+    runs-on: ${{ matrix.config.os }} 
+    strategy:
+      matrix:
+        config:
+
+          - os: ubuntu-latest
+            name: linux
+            arch: x64
+            platform: linux-x64
+            v8_lib_name: libv8_monolith.a
+          
+          # - os: windows-2019
+          #   name: windows
+          #   arch: x64
+          #   platform: windows-x64
+          #   v8_lib_name: v8_monolith.lib
+
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@master
+        with:
+          path: v8dotnet
+
+      - name: Download pre-built V8 library
+        shell: bash
+        run: |
+          export PLATFORM="${{ matrix.config.platform }}" 
+          wget -O v8.zip "${V8_BUILD_URL/PLATFORM/$PLATFORM}"
+          unzip v8.zip
+
+      - name: Build
+        shell: pwsh
+        working-directory: v8dotnet
+        run: |
+          $env:V8_SRC = "(Get-Item v8).FullName"
+          .\build.ps1

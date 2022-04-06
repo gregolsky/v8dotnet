@@ -34,44 +34,44 @@ function BuildV8NetProxy ( $srcPath, $buildType ) {
     write-host "Building V8.Net-Proxy"
     cd $srcPath
     rm -f -d -r build
-    #mkdir build
-    #cd build
-    # ls cmake
-    # write-host "----------------------linux64"
+    mkdir build
+    cd build
+    ls cmake
+    write-host "----------------------linux64"
+    write-host "----------cmake"
+    cmake -Bbuild/linux64 -GNinja -DCMAKE_TOOLCHAIN_FILE=./cmake/Toolchain_linux64_l4t.cmake -DCMAKE_BUILD_TYPE="$buildType" -S.
+    CheckLastExitCode
+    write-host "----------ninja"
+    ninja -C build/linux64
+    CheckLastExitCode
+
+    # write-host "----------------------win64"
     # write-host "----------cmake"
-    # cmake -Bbuild/linux64 -GNinja -DCMAKE_TOOLCHAIN_FILE=./cmake/Toolchain_linux64_l4t.cmake -DCMAKE_BUILD_TYPE="$buildType" -S.
+    # cmake -Bbuild/win64 -GNinja `
+    #     -D CMAKE_TOOLCHAIN_FILE=./cmake/Toolchain_win64_l4t.cmake `
+    #     -D CMAKE_BUILD_TYPE="$buildType" `
+    #     -D TARGET_PLATFORM="windows-x64" `
+    #     -S.
     # CheckLastExitCode
     # write-host "----------ninja"
-    # ninja -C build/linux64
+    # ninja -C build/win64
     # CheckLastExitCode
 
-    write-host "----------------------win64"
-    write-host "----------cmake"
-    cmake -Bbuild/win64 -GNinja `
-        -D CMAKE_TOOLCHAIN_FILE=./cmake/Toolchain_win64_l4t.cmake `
-        -D CMAKE_BUILD_TYPE="$buildType" `
-        -D TARGET_PLATFORM="windows-x64" `
-        -S.
-    CheckLastExitCode
-    write-host "----------ninja"
-    ninja -C build/win64
-    CheckLastExitCode
+    # write-host "----------------------win32"
+    # write-host "----------cmake"
+    # #cmake -Bbuild/win32 -GNinja -DCMAKE_TOOLCHAIN_FILE=cmake/Toolchain_win32_l4t.cmake -DCMAKE_BUILD_TYPE="$buildType" -S.
+    # CheckLastExitCode
+    # write-host "----------ninja"
+    # #ninja -C build/win32
+    # CheckLastExitCode
 
-    write-host "----------------------win32"
-    write-host "----------cmake"
-    #cmake -Bbuild/win32 -GNinja -DCMAKE_TOOLCHAIN_FILE=cmake/Toolchain_win32_l4t.cmake -DCMAKE_BUILD_TYPE="$buildType" -S.
-    CheckLastExitCode
-    write-host "----------ninja"
-    #ninja -C build/win32
-    CheckLastExitCode
-
-    write-host "----------------------mac64"
-    write-host "----------cmake"
-    #cmake -Bbuild/mac64 -GNinja -DCMAKE_TOOLCHAIN_FILE=cmake/Toolchain_mac64_l4t.cmake -DCMAKE_BUILD_TYPE="$buildType" -S.
-    CheckLastExitCode
-    write-host "----------ninja"
-    #ninja -C build/mac64
-    CheckLastExitCode
+    # write-host "----------------------mac64"
+    # write-host "----------cmake"
+    # #cmake -Bbuild/mac64 -GNinja -DCMAKE_TOOLCHAIN_FILE=cmake/Toolchain_mac64_l4t.cmake -DCMAKE_BUILD_TYPE="$buildType" -S.
+    # CheckLastExitCode
+    # write-host "----------ninja"
+    # #ninja -C build/mac64
+    # CheckLastExitCode
 
     write-host "----------------------arm64"
     write-host "----------cmake"

@@ -145,26 +145,7 @@ if ($targets.Count -eq 0) {
 New-Item -Path $RELEASE_DIR -Type Directory -Force
 CleanFiles $RELEASE_DIR
 
-#$embeddedDir = Join-Path -Path $OUT_DIR -ChildPath "V8Net.Embedded"
-#if (Test-Path $embeddedDir) {
-#    CleanDir $embeddedDir 
-#}
-
 CleanSrcDirs $TYPINGS_GENERATOR_SRC_DIR, $RVN_SRC_DIR, $DRTOOL_SRC_DIR, $SERVER_SRC_DIR, $CLIENT_SRC_DIR, $V8DOTNET_SRC_DIR, $TESTDRIVER_SRC_DIR
-
-#LayoutDockerPrerequisites $PROJECT_DIR $RELEASE_DIR
-
-#$versionObj = SetVersionInfo
-#$version = $versionObj.Version
-#$versionSuffix = $versionObj.VersionSuffix
-#$buildNumber = $versionObj.BuildNumber
-#$buildType = $versionObj.BuildType.ToLower()
-#Write-Host -ForegroundColor Green "Building $version"
-
-#SetSchemaInfoInTeamCity $PROJECT_DIR
-
-#ValidateClientDependencies $CLIENT_SRC_DIR $V8DOTNET_SRC_DIR
-#UpdateSourceWithBuildInfo $PROJECT_DIR $buildNumber $version
 
 InitGlobals $Debug $NoBundling
 #DownloadDependencies

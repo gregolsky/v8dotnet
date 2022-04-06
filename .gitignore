@@ -167,4 +167,5 @@ $RECYCLE.BIN/
 /.vs/V8.Net/v15
 
 artifacts
+packages
 *.tar.bz2
