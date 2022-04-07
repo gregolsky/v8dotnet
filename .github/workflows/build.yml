@@ -46,4 +46,4 @@ jobs:
         working-directory: v8dotnet
         run: |
           $env:V8_SRC = "(Get-Item v8).FullName"
-          .\build.ps1
+          .\build.ps1 -Target "${{ matrix.config.name }}"

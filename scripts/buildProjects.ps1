@@ -32,8 +32,8 @@ function BuildV8NetTest ( $projPath, $buildType ) {
 
 function BuildV8NetProxy ( $srcPath, $buildType ) {
     write-host "Building V8.Net-Proxy"
-    cd $srcPath
-    rm -f -d -r build
+    Push-Location $srcPath
+    Remove-Item -f -d -r build
     mkdir build
     cd build
     ls cmake

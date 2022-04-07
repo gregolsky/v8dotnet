@@ -103,36 +103,6 @@ $TEST_V8NET_CONSOLE_SERVICE_PROJ_PATH = [io.path]::combine($TEST_V8NET_CONSOLE_S
 $TEST_V8NET_CONSOLE_SERVICE_OUT_DIR = [io.path]::combine($TEST_V8NET_CONSOLE_SERVICE_SRC_DIR, "bin", $BUILD_TYPE)
 
 
-if ([string]::IsNullOrEmpty($Target) -eq $false) {
-    $Target = $Target.Split(",")
-} else {
-    $Target = $null
-
-    if ($WinX64) {
-        $Target = @( "win-x64" );
-    }
-
-    if ($WinX86) {
-        $Target = @( "win-x86" );
-    }
-
-    if ($LinuxX64) {
-        $Target = @( "linux-x64" );
-    } 
-
-    if ($MacOs) {
-        $Target = @( "macos" );
-    }
-
-    if ($Rpi) {
-        $Target = @( "rpi" );
-    }
-
-    if ($LinuxArm64) {
-        $Target = @( "linux-arm64" );
-    }
-}
-
 $targets = GetBuildTargets $Target
 
 if ($targets.Count -eq 0) {
@@ -144,18 +114,13 @@ if ($targets.Count -eq 0) {
 
 New-Item -Path $RELEASE_DIR -Type Directory -Force
 CleanFiles $RELEASE_DIR
-
-CleanSrcDirs $TYPINGS_GENERATOR_SRC_DIR, $RVN_SRC_DIR, $DRTOOL_SRC_DIR, $SERVER_SRC_DIR, $CLIENT_SRC_DIR, $V8DOTNET_SRC_DIR, $TESTDRIVER_SRC_DIR
+CleanSrcDirs $V8DOTNET_SRC_DIR 
 
 InitGlobals $Debug $NoBundling
-#DownloadDependencies
 
 if ($JustStudio -eq $False) {
     BuildV8NetProxy $V8NET_PROXY_SRC_DIR $BUILD_TYPE
     BuildV8DotNet $V8DOTNET_PROJ_PATH $BUILD_TYPE
-
-    ls -R /build/artifacts
-    ls -R /build/build
 
     #BuildV8NetTest $TEST_ASPDOTNET_PROJ_PATH $BUILD_TYPE
     #BuildV8NetTest $TEST_V8NET_CONSOLE_PROJ_PATH $BUILD_TYPE
@@ -167,22 +132,6 @@ if ($JustStudio -eq $False) {
 
     #CreateNugetPackage $CLIENT_SRC_DIR $RELEASE_DIR $versionSuffix
 }
-
-#$IsPosix = $IsWindows -eq $False
-#if (($JustStudio -eq $False) -and ($IsPosix -eq $False)) {
-#    $studioZipPath = [io.path]::combine($STUDIO_OUT_DIR, "Raven.Studio.zip")
-#    BuildEmbeddedNuget $PROJECT_DIR $OUT_DIR $SERVER_SRC_DIR $studioZipPath
-#    $embeddedDir = [io.path]::combine($OUT_DIR, "V8Net.Embedded")
-#    if ($target.Name -eq "windows-x64") {
-#        Validate-AssemblyVersion $(Join-Path -Path $embeddedDir -ChildPath "lib/netstandard2.0/Raven.Embedded.dll" ) $versionObj
-#    }
-#
-#    $nupkgs = Join-Path $embeddedDir -ChildPath "*.nupkg"
-#    Move-Item -Path $nupkgs -Destination $OUT_DIR
-#    Remove-Item -Recurse $embeddedDir
-#} else {
-#    write-host "Skip building V8Net Embedded."
-#}
 
 Foreach ($target in $targets) {
     $specOutDir = [io.path]::combine($OUT_DIR, $target.Name)
