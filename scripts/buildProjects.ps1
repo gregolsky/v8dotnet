@@ -35,8 +35,6 @@ function BuildV8NetProxy ( $srcPath, $buildType ) {
     Push-Location $srcPath
     Remove-Item -f -d -r build
     mkdir build
-    cd build
-    ls cmake
     write-host "----------------------linux64"
     write-host "----------cmake"
     cmake -Bbuild/linux64 -GNinja -DCMAKE_TOOLCHAIN_FILE=./cmake/Toolchain_linux64_l4t.cmake -DCMAKE_BUILD_TYPE="$buildType" -S.
