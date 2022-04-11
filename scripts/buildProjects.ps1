@@ -33,14 +33,14 @@ function BuildV8NetTest ( $projPath, $buildType ) {
 function BuildV8NetProxy ( $srcPath, $buildType ) {
     write-host "Building V8.Net-Proxy"
     Push-Location $srcPath
-    Remove-Item -f -d -r build
-    mkdir build
-    write-host "----------------------linux64"
+    Remove-Item -Force -Recurse build
+    New-Item -ErrorAction 0 -ItemType Directory "build/linux-x64"
+    write-host "----------------------linux-64"
     write-host "----------cmake"
-    cmake -Bbuild/linux64 -GNinja -DCMAKE_TOOLCHAIN_FILE=./cmake/Toolchain_linux64_l4t.cmake -DCMAKE_BUILD_TYPE="$buildType" -S.
+    cmake -Bbuild/linux-64 -GNinja -DCMAKE_TOOLCHAIN_FILE=./cmake/Toolchain_linux64_l4t.cmake -DCMAKE_BUILD_TYPE="$buildType" -S.
     CheckLastExitCode
     write-host "----------ninja"
-    ninja -C build/linux64
+    ninja -C build/linux-64
     CheckLastExitCode
 
     # write-host "----------------------win64"
