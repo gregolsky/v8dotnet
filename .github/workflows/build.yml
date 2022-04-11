@@ -6,7 +6,9 @@ on:
   workflow_dispatch:
 
 env:
-  V8_BUILD_URL: https://github.com/gregolsky/v8-monolith-builds/releases/download/v9.9.115.9/v8-out-PLATFORM.zip
+  V8_OBJ_ZIP: v8-out-PLATFORM.zip
+  V8_INCLUDE_ZIP: include.zip 
+  V8_BUILD_URL: https://github.com/gregolsky/v8-monolith-builds/releases/download/v9.9.115.9/
 
 jobs:
   build_v8netproxy_linux_x64:
@@ -44,8 +46,12 @@ jobs:
         shell: bash
         run: |
           export PLATFORM="${{ matrix.config.platform }}" 
-          wget -O v8.zip "${V8_BUILD_URL/PLATFORM/$PLATFORM}"
+          wget -O v8.zip "${V8_BUILD_URL}${V8_OBJ_ZIP/PLATFORM/$PLATFORM}"
+          wget -O v8-include.zip "${V8_BUILD_URL}${V8_INCLUDE_ZIP}"
           unzip v8.zip
+          unzip v8-include.zip
+          ls -R v8
+          ls -R v8-include
 
       - name: Build
         shell: pwsh
