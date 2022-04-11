@@ -34,6 +34,12 @@ jobs:
         with:
           path: v8dotnet
 
+      - name: Install depot tools
+        shell: pwsh
+        run: |
+          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+          echo "$pwd/depot_tools" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
       - name: Download pre-built V8 library
         shell: bash
         run: |
