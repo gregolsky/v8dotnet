@@ -48,10 +48,10 @@ jobs:
           export PLATFORM="${{ matrix.config.platform }}" 
           wget -O v8.zip "${V8_BUILD_URL}${V8_OBJ_ZIP/PLATFORM/$PLATFORM}"
           wget -O v8-include.zip "${V8_BUILD_URL}${V8_INCLUDE_ZIP}"
-          unzip v8.zip
-          unzip v8-include.zip
+          mkdir v8
+          unzip -d v8 v8.zip
+          unzip -d v8 v8-include.zip
           ls -R v8
-          ls -R v8-include
 
       - name: Build
         shell: pwsh
