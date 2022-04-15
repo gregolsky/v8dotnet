@@ -51,6 +51,7 @@ jobs:
           mkdir v8
           unzip -d v8 v8.zip
           unzip -d v8 v8-include.zip
+          chmod -R 777 v8
           ls -R v8
 
       - name: Build
