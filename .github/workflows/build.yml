@@ -58,5 +58,5 @@ jobs:
         shell: pwsh
         working-directory: v8dotnet
         run: |
-          $env:V8_SRC = "$($(Get-Item v8).FullName)"
+          $env:V8_SRC = $(Get-Item v8).FullName
           .\build.ps1 -Target "${{ matrix.config.platform }}"
