@@ -59,4 +59,5 @@ jobs:
         working-directory: v8dotnet
         run: |
           $env:V8_SRC = $(Get-Item ../v8).FullName
+          Write-Host "V8_SRC: $($env:V8_SRC)"
           .\build.ps1 -Target "${{ matrix.config.platform }}"
