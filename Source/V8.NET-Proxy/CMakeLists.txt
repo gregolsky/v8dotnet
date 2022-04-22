@@ -12,10 +12,6 @@ set (MSCPlatformToolset 200)
 
 #set(BOOST_BEAST_INCLUDE "usr/include" PATH "Path to the Boost.Beast include dir." )
 
-include_directories(
-    ${V8_SRC}
-    ${V8_SRC}/include
-)
 
 link_directories(${GLIB_LIBRARY_DIRS})
 
@@ -81,10 +77,17 @@ endif()
 message("${PROJECT_NAME}: MAIN PROJECT: ${CMAKE_PROJECT_NAME}")
 message("${PROJECT_NAME}: CURR PROJECT: ${CMAKE_CURRENT_SOURCE_DIR}")
 message("${PROJECT_NAME}: CURR BIN DIR: ${CMAKE_CURRENT_BINARY_DIR}")
+message("${PROJECT_NAME}: TARGET_PLATFORM: ${TARGET_PLATFORM}")
+message("${PROJECT_NAME}: V8_SRC: ${V8_SRC}")
 
 ############### Files & Targets ############################
 # Files of project and target to build                     #
 ############################################################
+
+include_directories(
+    ${V8_SRC}
+    ${V8_SRC}/include
+)
 
 set(LIBV8
     v8_monolith
