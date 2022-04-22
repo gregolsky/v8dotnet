@@ -37,7 +37,7 @@ function BuildV8NetProxy ( $srcPath, $buildType ) {
     New-Item -ErrorAction 0 -ItemType Directory "build/linux-x64"
     write-host "----------------------linux-64"
     write-host "----------cmake"
-    cmake -Bbuild/linux-64 -GNinja -DCMAKE_TOOLCHAIN_FILE=./cmake/Toolchain_linux64_l4t.cmake -DCMAKE_BUILD_TYPE="$buildType" -S.
+    cmake -Bbuild/linux-64 -GNinja -DCMAKE_TOOLCHAIN_FILE=./cmake/Toolchain_linux64_l4t.cmake -DCMAKE_BUILD_TYPE="$buildType" -DTARGET_PLATFORM="linux-x64" -S.
     CheckLastExitCode
     write-host "----------ninja"
     ninja -C "build/linux-64"
