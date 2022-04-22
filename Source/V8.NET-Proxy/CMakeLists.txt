@@ -5,14 +5,10 @@ cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 project(V8_Net_Proxy) # <-- This defines many internal CMake variables, required for other commands.
 
 set (MSCPlatformToolset 200)
-# set (V8_SRC $ENV{V8_SRC})
-# set (TARGET_PLATFORM $ENV{TARGET_PLATFORM})
 
 # TODO: Make a variable for holding the path to the V8 source. 
 # installed clang and set it as the default compiler
 # installed sudo apt-get install libc++-dev 
-
-#set(BOOST_BEAST_INCLUDE "usr/include" PATH "Path to the Boost.Beast include dir." )
 
 link_directories(${GLIB_LIBRARY_DIRS})
 

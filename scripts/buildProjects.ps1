@@ -42,6 +42,7 @@ function BuildV8NetProxy ( $srcPath, $buildType ) {
         -DCMAKE_BUILD_TYPE="$buildType" `
         -DTARGET_PLATFORM="linux-x64" `
         -DV8_SRC="$env:V8_SRC" `
+        -DBOOST_SRC="$env:BOOST_SRC" `
         -DBITNESS="x64" `
         -S.
     CheckLastExitCode

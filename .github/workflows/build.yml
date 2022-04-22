@@ -9,6 +9,7 @@ env:
   V8_OBJ_ZIP: v8-out-PLATFORM.zip
   V8_INCLUDE_ZIP: include.zip 
   V8_BUILD_URL: https://github.com/gregolsky/v8-monolith-builds/releases/download/v9.9.115.9/
+  BOOST_BEAST_URL: https://boostorg.jfrog.io/artifactory/main/release/1.78.0/source/boost_1_78_0.tar.bz2
 
 jobs:
   build_v8netproxy_linux_x64:
@@ -53,11 +54,19 @@ jobs:
           unzip -d v8 v8-include.zip
           chmod -R 777 v8
           ls -R v8
+      
+      - name: Download BOOST Beast
+        shell: bash
+        run: |
+          wget -O "boost.tar.bz2" "$BOOST_BEAST_URL"
+          tar xvjf boost.tar.bz2
+          ls
 
       - name: Build
         shell: pwsh
         working-directory: v8dotnet
         run: |
           $env:V8_SRC = $(Get-Item ../v8).FullName
+          $env:BOOST_SRC = $(Get-Item ../boost).FullName
           Write-Host "V8_SRC: $($env:V8_SRC)"
           .\build.ps1 -Target "${{ matrix.config.platform }}"
