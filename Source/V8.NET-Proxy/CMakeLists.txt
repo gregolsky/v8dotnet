@@ -12,20 +12,17 @@ set (MSCPlatformToolset 200)
 
 #set(BOOST_BEAST_INCLUDE "usr/include" PATH "Path to the Boost.Beast include dir." )
 
-# include_directories(
-#     #debugging/
-#     #V8/v8/outecho .gn/x64.release/obj/third_party/icu
-#     #V8/v8/out.gn/x64.release/obj/src/inspector
-#     #V8/v8/out.gn/x64.release/obj
-#     #V8/v8/out.gn/x64.release/gen
-# )
+include_directories(
+    ${V8_SRC}
+    ${V8_SRC}/include
+)
+
+link_directories(${GLIB_LIBRARY_DIRS})
 
 FIND_PACKAGE(PkgConfig)
 PKG_CHECK_MODULES(GLIB glib-2.0)
 include_directories(
     ${GLIB_INCLUDE_DIRS} 
-    ${V8_SRC}
-    ${V8_SRC}/include
     ${BOOST_BEAST_INCLUDE}
 )
 link_directories(${GLIB_LIBRARY_DIRS})
@@ -93,7 +90,7 @@ set(LIBV8
     v8_monolith
 )
 link_directories(
-    V8/v8/out.gn/x64.release.sample/obj/
+    ${V8_SRC}/out.gn/${TARGET_PLATFORM}.release/obj/
 )
 
 FILE(GLOB DEBUGGING_H "./debugging/*.h")
