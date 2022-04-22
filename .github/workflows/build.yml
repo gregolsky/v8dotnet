@@ -59,8 +59,9 @@ jobs:
         shell: bash
         run: |
           wget -O "boost.tar.bz2" "$BOOST_BEAST_URL"
-          tar xvjf boost.tar.bz2
-          ls
+          mkdir boost
+          tar xvjf boost.tar.bz2 --strip-components 1 -C boost
+          ls boost
 
       - name: Build
         shell: pwsh
