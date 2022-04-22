@@ -1,6 +1,5 @@
 # Toolchain_aarch64_l4t.cmake
 
-set(TARGET_PLATFORM linux-x64)
 set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_PROCESSOR x86_64)
 
