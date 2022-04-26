@@ -54,6 +54,7 @@ jobs:
           unzip -d v8 v8-include.zip
           chmod -R 777 v8
           ls -R v8
+          cp ${V8_SRC}/out.gn/x64.release/obj/libv8_monolith.a ${V8_SRC}/out.gn/x64.release/obj/v8_monolith.a
       
       - name: Download BOOST Beast
         shell: bash
