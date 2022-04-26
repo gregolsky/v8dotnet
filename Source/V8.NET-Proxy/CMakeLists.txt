@@ -84,6 +84,7 @@ message("${PROJECT_NAME}: V8_SRC: ${V8_SRC}")
 include_directories(
     ${V8_SRC}
     ${V8_SRC}/include
+    ${BOOST_SRC}
 )
 
 set(LIBV8

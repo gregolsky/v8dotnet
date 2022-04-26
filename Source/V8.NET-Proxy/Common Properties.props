@@ -9,5 +9,9 @@
       <Value>$(V8_SRC)</Value>
       <EnvironmentVariable>true</EnvironmentVariable>
     </BuildMacro>
+    <BuildMacro Include="BOOST_SRC">
+      <Value>$(BOOST_SRC)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
   </ItemGroup>
 </Project>
