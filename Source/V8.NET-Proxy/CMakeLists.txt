@@ -92,6 +92,7 @@ set(LIBV8
 )
 link_directories(
     ${V8_SRC}/out.gn/${BITNESS}.release/obj/
+    ${V8_SRC}/${BITNESS}.release/obj/
 )
 
 FILE(GLOB DEBUGGING_H "./debugging/*.h")
