@@ -20,6 +20,8 @@ function BuildV8NetProxyInterface ( $projPath, $buildType ) {
 function BuildV8DotNet ( $projPath, $buildType ) {
     write-host "Building V8.Net"
     #& dotnet build /p:SourceLinkCreate=true /p:GenerateDocumentationFile=true --no-incremental $buildType $projPath;
+    $v8netReleaseDir = [io.path]::combine($env:RELEASE_DIR, "V8.NET")
+    mkdir -p $v8netReleaseDir
     & dotnet build /p:SourceLinkCreate=true /p:GenerateDocumentationFile=true --configuration $buildType -o $env:RELEASE_DIR $projPath;
     CheckLastExitCode
 }
@@ -33,23 +35,31 @@ function BuildV8NetTest ( $projPath, $buildType ) {
 function BuildV8NetProxy ( $srcPath, $buildType ) {
     write-host "Building V8.Net-Proxy"
     Push-Location $srcPath
-    Remove-Item -Force -Recurse -ErrorAction SilentlyContinue build
-    New-Item -ErrorAction 0 -ItemType Directory "build/linux-x64"
     write-host "----------------------linux-64"
     write-host "----------cmake"
-    cmake -Bbuild/linux-64 -GNinja `
-        -DCMAKE_TOOLCHAIN_FILE=./cmake/Toolchain_linux64_l4t.cmake `
-        -DCMAKE_BUILD_TYPE="$buildType" `
-        -DTARGET_PLATFORM="linux-x64" `
-        -DV8_SRC="$env:V8_SRC" `
-        -DBOOST_SRC="$env:BOOST_SRC" `
-        -DBITNESS="x64" `
-        -S.
-    CheckLastExitCode
-    write-host "----------ninja"
-    ninja -C "build/linux-64"
-    CheckLastExitCode
 
+    try {
+        $artifactsDir = "$env:RELEASE_DIR"
+        $artifactsDir_linuxX64 = "$artifactsDir/v8netproxy/linux-x64"
+        
+        Remove-Item -Force -Recurse -ErrorAction SilentlyContinue build
+        New-Item -ErrorAction 0 -ItemType Directory $artifactsDir_linuxX64
+
+        cmake -B$artifactsDir_linuxX64 -GNinja `
+            -DCMAKE_TOOLCHAIN_FILE=./cmake/Toolchain_linux64_l4t.cmake `
+            -DCMAKE_BUILD_TYPE="$buildType" `
+            -DTARGET_PLATFORM="linux-x64" `
+            -DV8_SRC="$env:V8_SRC" `
+            -DBOOST_SRC="$env:BOOST_SRC" `
+            -DBITNESS="x64" `
+            -S.
+        CheckLastExitCode
+
+        write-host "----------ninja"
+        ninja -C "$artifactsDir_linuxX64"
+        CheckLastExitCode
+
+        ls $artifactsDir_linuxX64
     # write-host "----------------------win64"
     # write-host "----------cmake"
     # cmake -Bbuild/win64 -GNinja `
@@ -97,6 +107,9 @@ function BuildV8NetProxy ( $srcPath, $buildType ) {
 
     write-host "Building V8.Net-Proxy is completed"
     #CheckLastExitCode
+    } finally {
+        Pop-Location
+    }
 }
 
 function NpmInstall () {

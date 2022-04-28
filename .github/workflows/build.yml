@@ -72,3 +72,5 @@ jobs:
           Write-Host "V8_SRC: $($env:V8_SRC)"
           Write-Host "BOOST_SRC: $($env:BOOST_SRC)"
           .\build.ps1 -Target "${{ matrix.config.platform }}"
+          
+          # Source/bin/netstandard/Release/libV8_Net_Proxy_x86_64.so

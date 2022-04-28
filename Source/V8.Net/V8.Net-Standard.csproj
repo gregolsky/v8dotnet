@@ -99,16 +99,16 @@ Supports .Net Standard 2.0+ and .Net 461+.  A project in the repo also supports 
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
-  <!--<Target Name="CopyNativeFiles" AfterTargets="AfterBuild">
+  <Target Name="CopyNativeFiles" AfterTargets="AfterBuild">
     <ItemGroup>
-      <NativeFiles Include="..\bin\netstandard\$(Configuration)\*V8_Net_Proxy_*" />
+      <NativeFiles Include="..\..\artifacts\v8netproxy\linux-x64\*V8_Net_Proxy_*" />
     </ItemGroup>
     <Message Text="Copying native files ..." Importance="High" />
     <Copy SourceFiles="@(NativeFiles)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
     <Message Text="Done copying native files." Importance="High" />
   </Target>
   
-  <Target Name="CopyNativeFilesOnPublish" AfterTargets="Publish">
+  <!--<Target Name="CopyNativeFilesOnPublish" AfterTargets="Publish">
     <ItemGroup>
       <NativeFiles Include="..\bin\netstandard\$(Configuration)\*V8_Net_Proxy_*" />
     </ItemGroup>

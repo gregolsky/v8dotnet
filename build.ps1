@@ -61,7 +61,7 @@ if ($Debug.IsPresent) {
     $BUILD_TYPE = "Release"
 }
 
-$PROJECT_DIR = Get-ScriptDirectory
+$env:PROJECT_DIR = $PROJECT_DIR = Get-ScriptDirectory
 $env:RELEASE_DIR = $RELEASE_DIR = [io.path]::combine($PROJECT_DIR, "artifacts")
 $OUT_DIR = [io.path]::combine($PROJECT_DIR, "artifacts")
 
