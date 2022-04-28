@@ -45,7 +45,7 @@ function BuildV8NetProxy ( $srcPath, $buildType ) {
         Remove-Item -Force -Recurse -ErrorAction SilentlyContinue build
         New-Item -ErrorAction 0 -ItemType Directory $artifactsDir_linuxX64
 
-        cmake -B$artifactsDir_linuxX64 -GNinja `
+        cmake -B"$artifactsDir_linuxX64" -GNinja `
             -DCMAKE_TOOLCHAIN_FILE=./cmake/Toolchain_linux64_l4t.cmake `
             -DCMAKE_BUILD_TYPE="$buildType" `
             -DTARGET_PLATFORM="linux-x64" `
