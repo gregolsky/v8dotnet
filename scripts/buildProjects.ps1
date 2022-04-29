@@ -47,7 +47,7 @@ function BuildV8NetProxy ( $srcPath, $outputPath, $buildType, $targetPlatform ) 
         New-Item -ErrorAction 0 -ItemType Directory $platformOutDir
         New-Item -ErrorAction 0 -ItemType Directory $platformBuildDir
         
-        $cmakeToolchain = [io.path]::Combine($srcPath, "cmake/Toolchain_$($targetPlatform)_l4t.cmake")
+        $cmakeToolchain = [io.path]::Combine($srcPath, "cmake", "Toolchain_$($targetPlatform)_l4t.cmake")
         Write-Host "CMAKE toolchain: $cmakeToolchain"
 
         # TODO @gregolsky get BITNESS from target

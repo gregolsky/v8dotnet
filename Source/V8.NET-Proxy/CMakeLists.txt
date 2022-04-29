@@ -2,7 +2,7 @@
 # Converted Project : V8.Net-Proxy-x64.vcxproj
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
-project(V8_Net_Proxy) # <-- This defines many internal CMake variables, required for other commands.
+project(v8netproxy) # <-- This defines many internal CMake variables, required for other commands.
 
 set (MSCPlatformToolset 200)
 
