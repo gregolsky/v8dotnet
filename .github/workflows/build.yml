@@ -60,8 +60,7 @@ jobs:
         run: |
           wget -O "boost.tar.bz2" "$BOOST_BEAST_URL"
           mkdir boost
-          tar xvjf boost.tar.bz2 --strip-components 1 -C boost
-          ls boost
+          tar xjf boost.tar.bz2 --strip-components 1 -C boost
 
       - name: Build
         shell: pwsh
