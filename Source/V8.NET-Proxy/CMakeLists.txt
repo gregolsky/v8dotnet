@@ -32,12 +32,12 @@ add_compile_options("-fms-extensions")
 # Project
 get_filename_component(PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
 set(DEPENDENCIES_DIR ${PROJECT_DIR}/dependencies)
-set(PROJECT_NAME V8_Net_Proxy_x86_64) #"${CMAKE_SYSTEM_PROCESSOR})
+set(PROJECT_NAME v8netproxy) #"${CMAKE_SYSTEM_PROCESSOR})
 
 
 # Outputs
-set(OUTPUT_DEBUG ../bin/netstandard/Debug/)
-set(OUTPUT_RELEASE ../bin/netstandard/Release/)
+set(OUTPUT_DEBUG ../../../build/v8netproxy/Debug/)
+set(OUTPUT_RELEASE ../../../build/v8netproxy/Release/)
 
 
 #g++ -I. -Iinclude samples/hello-world.cc -o hello_world -lv8_monolith -Lout.gn/x64.release.sample/obj/ -pthread -lrt -ldl -std=c++14 -DV8_COMPRESS_POINTERS
