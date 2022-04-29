@@ -71,7 +71,7 @@ $V8DOTNET_OUT_DIR = [io.path]::combine($V8DOTNET_SRC_DIR, "bin", $BUILD_TYPE)
 
 $V8NET_PROXY_SRC_DIR = [io.path]::combine($PROJECT_DIR, "Source", "V8.NET-Proxy")
 #$V8NET_PROXY_PROJ_PATH = [io.path]::combine($V8NET_PROXY_SRC_DIR, "V8.Net-Proxy-x64-Standard.csproj")
-$V8NET_PROXY_OUT_DIR = [io.path]::combine($V8NET_PROXY_SRC_DIR, "bin", $BUILD_TYPE)
+$V8NET_PROXY_OUT_DIR = [io.path]::combine($V8NET_PROXY_SRC_DIR, "bin")
 
 $targets = GetBuildTargets $Target
 
@@ -89,7 +89,7 @@ CleanSrcDirs $V8DOTNET_SRC_DIR
 InitGlobals $Debug $NoBundling
 
 foreach ($target in $targets) {
-    BuildV8NetProxy $V8NET_PROXY_SRC_DIR $V8NET_PROXY_OUT_DIR $BUILD_TYPE $TARGET_PLATFORM
+    BuildV8NetProxy $V8NET_PROXY_SRC_DIR $V8NET_PROXY_OUT_DIR $BUILD_TYPE $target
 }
 
 
