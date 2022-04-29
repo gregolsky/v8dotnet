@@ -39,16 +39,16 @@ function BuildV8NetProxy ( $srcPath, $outputPath, $buildType, $targetPlatform ) 
     Push-Location $srcPath
 
     try {
-        $platformBuildDir = [io.path]::Combine("build", $buildType, $platform)
-        $platformOutDir = [io.path]::Combine($outputPath, $buildType, $platform)
-        
+        $platformBuildDir = [io.path]::Combine("build", $buildType, $targetPlatform)
+        $platformOutDir = [io.path]::Combine($outputPath, $buildType, $targetPlatform)
+
         Remove-Item -Force -Recurse -ErrorAction SilentlyContinue $platformBuildDir
         Remove-Item -Force -Recurse -ErrorAction SilentlyContinue $platformOutDir
         New-Item -ErrorAction 0 -ItemType Directory $platformOutDir
         New-Item -ErrorAction 0 -ItemType Directory $platformBuildDir
         
-        Write-Host "$platformOutDir"
-        Write-Host "$platformBuildDir"
+        Write-Host "OUTDIR $platformOutDir"
+        Write-Host "BUILDDIR $platformBuildDir"
         throw "stop"
 
         cmake -B"$platformBuildDir" -GNinja `
