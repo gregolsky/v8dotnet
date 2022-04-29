@@ -50,7 +50,7 @@ function BuildV8NetProxy ( $srcPath, $outputPath, $buildType, $targetPlatform ) 
 
         # TODO @gregolsky get BITNESS from target
         cmake -B"$platformBuildDir" -GNinja `
-            -DCMAKE_TOOLCHAIN_FILE="./cmake/Toolchain_${targetPlatform}_l4t.cmake" `
+            -DCMAKE_TOOLCHAIN_FILE="./cmake/Toolchain_$($targetPlatform)_l4t.cmake" `
             -DCMAKE_BUILD_TYPE="$buildType" `
             -DTARGET_PLATFORM="$targetPlatform" `
             -DOUTPUT_PATH="$platformOutDir" `
