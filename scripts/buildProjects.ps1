@@ -47,10 +47,6 @@ function BuildV8NetProxy ( $srcPath, $outputPath, $buildType, $targetPlatform ) 
         New-Item -ErrorAction 0 -ItemType Directory $platformOutDir
         New-Item -ErrorAction 0 -ItemType Directory $platformBuildDir
         
-        Write-Host "OUTDIR $platformOutDir"
-        Write-Host "BUILDDIR $platformBuildDir"
-        throw "stop"
-
         cmake -B"$platformBuildDir" -GNinja `
             -DCMAKE_TOOLCHAIN_FILE="./cmake/Toolchain_$($targetPlatform)_l4t.cmake" `
             -DCMAKE_BUILD_TYPE="$buildType" `

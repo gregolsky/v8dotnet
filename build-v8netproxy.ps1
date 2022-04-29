@@ -89,7 +89,7 @@ CleanSrcDirs $V8DOTNET_SRC_DIR
 InitGlobals $Debug $NoBundling
 
 foreach ($target in $targets) {
-    BuildV8NetProxy $V8NET_PROXY_SRC_DIR $V8NET_PROXY_OUT_DIR $BUILD_TYPE $target
+    BuildV8NetProxy $V8NET_PROXY_SRC_DIR $V8NET_PROXY_OUT_DIR $BUILD_TYPE $target.Name
 }
 
 
