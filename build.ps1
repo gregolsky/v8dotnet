@@ -118,20 +118,8 @@ CleanSrcDirs $V8DOTNET_SRC_DIR
 
 InitGlobals $Debug $NoBundling
 
-if ($JustStudio -eq $False) {
-    BuildV8NetProxy $V8NET_PROXY_SRC_DIR $BUILD_TYPE
-    BuildV8DotNet $V8DOTNET_PROJ_PATH $BUILD_TYPE
-
-    #BuildV8NetTest $TEST_ASPDOTNET_PROJ_PATH $BUILD_TYPE
-    #BuildV8NetTest $TEST_V8NET_CONSOLE_PROJ_PATH $BUILD_TYPE
-    #BuildV8NetTest $TEST_V8NET_CONSOLE_HANDLE_PROJ_PATH $BUILD_TYPE
-    #BuildV8NetTest $TEST_V8NET_CONSOLE_NET_CORE_PROJ_PATH $BUILD_TYPE
-    #BuildV8NetTest $TEST_V8NET_CONSOLE_NET_CORE_NUGET_PROJ_PATH $BUILD_TYPE
-    #BuildV8NetTest $TEST_V8NET_CONSOLE_OBJECT_EXAMPLES_PROJ_PATH $BUILD_TYPE
-    #BuildV8NetTest $TEST_WCF_SERVICE_PROJ_PATH $BUILD_TYPE
-
-    #CreateNugetPackage $CLIENT_SRC_DIR $RELEASE_DIR $versionSuffix
-}
+    BuildV8NetProxy $V8NET_PROXY_SRC_DIR "linux-x64" $BUILD_TYPE
+    #BuildV8DotNet $V8DOTNET_PROJ_PATH $BUILD_TYPE
 
 Foreach ($target in $targets) {
     $specOutDir = [io.path]::combine($OUT_DIR, $target.Name)
