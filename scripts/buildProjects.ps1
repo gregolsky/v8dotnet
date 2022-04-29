@@ -56,7 +56,7 @@ function BuildV8NetProxy ( $srcPath, $outputPath, $buildType, $targetPlatform ) 
             -DOUTPUT_PATH="$platformOutDir" `
             -DV8_SRC="$env:V8_SRC" `
             -DBOOST_SRC="$env:BOOST_SRC" `
-            -DBITNESS="x64" ` 
+            -DBITNESS="x64" `
             -S.
         CheckLastExitCode
 
