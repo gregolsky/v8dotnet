@@ -39,13 +39,12 @@ function BuildV8NetProxy ( $srcPath, $targetPlatform, $buildType ) {
     write-host "----------cmake"
 
     try {
-        $artifactsDir = "$env:RELEASE_DIR"
-        $artifactsDir_linuxX64 = "$artifactsDir/v8netproxy/linux-x64"
+        $buildDir = [io.path]::combine("build", $targetPlatform)
         
         Remove-Item -Force -Recurse -ErrorAction SilentlyContinue build
-        New-Item -ErrorAction 0 -ItemType Directory $artifactsDir_linuxX64
+        New-Item -ErrorAction 0 -ItemType Directory $buildDir
 
-        cmake -B"$artifactsDir_linuxX64" -GNinja `
+        cmake -B"$buildDir" -GNinja `
             -DCMAKE_TOOLCHAIN_FILE=./cmake/Toolchain_$targetPlatform_l4t.cmake `
             -DCMAKE_BUILD_TYPE="$buildType" `
             -DTARGET_PLATFORM="linux-x64" `
@@ -56,10 +55,10 @@ function BuildV8NetProxy ( $srcPath, $targetPlatform, $buildType ) {
         CheckLastExitCode
 
         write-host "----------ninja"
-        ninja -C "$artifactsDir_linuxX64"
+        ninja -C "$buildDir"
         CheckLastExitCode
 
-        ls $artifactsDir_linuxX64
+        ls $buildDir
     # write-host "----------------------win64"
     # write-host "----------cmake"
     # cmake -Bbuild/win64 -GNinja `
