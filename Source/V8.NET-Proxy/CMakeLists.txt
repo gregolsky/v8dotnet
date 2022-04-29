@@ -35,11 +35,6 @@ set(DEPENDENCIES_DIR ${PROJECT_DIR}/dependencies)
 set(PROJECT_NAME v8netproxy) #"${CMAKE_SYSTEM_PROCESSOR})
 
 
-# Outputs
-set(OUTPUT_DEBUG ../../../build/v8netproxy/Debug/)
-set(OUTPUT_RELEASE ../../../build/v8netproxy/Release/)
-
-
 #g++ -I. -Iinclude samples/hello-world.cc -o hello_world -lv8_monolith -Lout.gn/x64.release.sample/obj/ -pthread -lrt -ldl -std=c++14 -DV8_COMPRESS_POINTERS
 SET(GCC_COVERAGE_COMPILE_FLAGS "-shared -fPIC -pthread -lrt -ldl -std=c++14 -DV8_COMPRESS_POINTERS")
 
@@ -57,18 +52,11 @@ if(NOT CMAKE_BUILD_TYPE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 ############## Artefacts Output ############################
-# Defines outputs , depending BUILD TYPE                   #
+# Defines outputs #
 ############################################################
-
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_DIR}/${OUTPUT_DEBUG}")
-  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_DIR}/${OUTPUT_DEBUG}")
-  set(CMAKE_EXECUTABLE_OUTPUT_DIRECTORY "${PROJECT_DIR}/${OUTPUT_DEBUG}")
-else()
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_DIR}/${OUTPUT_RELEASE}")
-  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_DIR}/${OUTPUT_RELEASE}")
-  set(CMAKE_EXECUTABLE_OUTPUT_DIRECTORY "${PROJECT_DIR}/${OUTPUT_RELEASE}")
-endif()
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_DIR}/${OUTPUT_PATH}")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_DIR}/${OUTPUT_PATH}")
+set(CMAKE_EXECUTABLE_OUTPUT_DIRECTORY "${PROJECT_DIR}/${OUTPUT_PATH}")
 
 # Messages
 message("${PROJECT_NAME}: MAIN PROJECT: ${CMAKE_PROJECT_NAME}")

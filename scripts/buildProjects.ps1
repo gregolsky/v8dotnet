@@ -32,34 +32,39 @@ function BuildV8NetTest ( $projPath, $buildType ) {
     CheckLastExitCode
 }
 
-function BuildV8NetProxy ( $srcPath, $buildType ) {
-    write-host "Building V8.Net-Proxy"
+function BuildV8NetProxy ( $srcPath, $outputPath, $buildType, $targetPlatform ) {
+    Write-Host "Building V8.Net-Proxy for platform $targetPlatform ($buildType)"
+    Write-Host "Output path: $outputPath"
+
     Push-Location $srcPath
-    write-host "----------------------linux-64"
-    write-host "----------cmake"
 
     try {
-        $artifactsDir = "$env:RELEASE_DIR"
-        $artifactsDir_linuxX64 = "$artifactsDir/v8netproxy/linux-x64"
+        $platformBuildDir = [io.path]::Combine("build", $buildType, $platform)
+        $platformOutDir = [io.path]::Combine($outputPath, $buildType, $platform)
         
-        Remove-Item -Force -Recurse -ErrorAction SilentlyContinue build
-        New-Item -ErrorAction 0 -ItemType Directory $artifactsDir_linuxX64
+        Remove-Item -Force -Recurse -ErrorAction SilentlyContinue $platformBuildDir
+        Remove-Item -Force -Recurse -ErrorAction SilentlyContinue $platformOutDir
+        New-Item -ErrorAction 0 -ItemType Directory $platformOutDir
+        New-Item -ErrorAction 0 -ItemType Directory $platformBuildDir
+        
+        Write-Host "$platformOutDir"
+        Write-Host "$platformBuildDir"
+        throw "stop"
 
-        cmake -B"$artifactsDir_linuxX64" -GNinja `
-            -DCMAKE_TOOLCHAIN_FILE=./cmake/Toolchain_linux64_l4t.cmake `
+        cmake -B"$platformBuildDir" -GNinja `
+            -DCMAKE_TOOLCHAIN_FILE="./cmake/Toolchain_$($targetPlatform)_l4t.cmake" `
             -DCMAKE_BUILD_TYPE="$buildType" `
-            -DTARGET_PLATFORM="linux-x64" `
+            -DTARGET_PLATFORM="$targetPlatform" `
+            -DOUTPUT_PATH="$platformOutDir" `
             -DV8_SRC="$env:V8_SRC" `
             -DBOOST_SRC="$env:BOOST_SRC" `
-            -DBITNESS="x64" `
+            -DBITNESS="x64" ` #TODO
             -S.
         CheckLastExitCode
 
-        write-host "----------ninja"
-        ninja -C "$artifactsDir_linuxX64"
+        ninja -C "$platformBuildDir"
         CheckLastExitCode
 
-        ls $artifactsDir_linuxX64
     # write-host "----------------------win64"
     # write-host "----------cmake"
     # cmake -Bbuild/win64 -GNinja `
