@@ -47,6 +47,8 @@ function BuildV8NetProxy ( $srcPath, $outputPath, $buildType, $targetPlatform ) 
         New-Item -ErrorAction 0 -ItemType Directory $platformOutDir
         New-Item -ErrorAction 0 -ItemType Directory $platformBuildDir
         
+
+        # TODO @gregolsky get BITNESS from target
         cmake -B"$platformBuildDir" -GNinja `
             -DCMAKE_TOOLCHAIN_FILE="./cmake/Toolchain_$($targetPlatform)_l4t.cmake" `
             -DCMAKE_BUILD_TYPE="$buildType" `
@@ -54,7 +56,7 @@ function BuildV8NetProxy ( $srcPath, $outputPath, $buildType, $targetPlatform ) 
             -DOUTPUT_PATH="$platformOutDir" `
             -DV8_SRC="$env:V8_SRC" `
             -DBOOST_SRC="$env:BOOST_SRC" `
-            -DBITNESS="x64" ` #TODO
+            -DBITNESS="x64" ` 
             -S.
         CheckLastExitCode
 
