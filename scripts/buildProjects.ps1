@@ -47,7 +47,7 @@ function BuildV8NetProxy ( $srcPath, $outputPath, $buildType, $targetPlatform ) 
         New-Item -ErrorAction 0 -ItemType Directory $platformOutDir
         New-Item -ErrorAction 0 -ItemType Directory $platformBuildDir
         
-        $cmakeToolchainFile = "./cmake/Toolchain_$($targetPlatform)_l4t.cmake"
+        $cmakeToolchainFile = "./cmake/Toolchain_$($targetPlatform)_l4t.cmake_DOESNOTEXIST"
         #[io.path]::Combine($srcPath, "cmake", "Toolchain_$($targetPlatform)_l4t.cmake")
         Write-Host "CMAKE toolchain: $cmakeToolchainFile"
         Write-Host "CMAKE toolchain: $(Test-Path $cmakeToolchainFile)"
