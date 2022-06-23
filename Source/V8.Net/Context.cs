@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Dynamic;
 using V8.Net.Proxy;
+using System.Threading;
 
 namespace V8.Net
 {
@@ -65,8 +66,39 @@ namespace V8.Net
         internal Context(NativeContext* nativeContext) { _NativeContext = nativeContext; }
         //~Context() { V8NetProxy.DeleteContext(_NativeContext); _NativeContext = null; }
 
+        internal readonly Dictionary<Type, TypeBinder> _Binders = new();
+        internal readonly Dictionary<Type, Func<TypeBinder>> _BindersLazy = new();
+
+        //internal readonly IndexedObjectList<RootableReference> _Objects = new IndexedObjectList<RootableReference>();
+        //internal readonly ReaderWriterLock _ObjectsLocker = new ReaderWriterLock();
+
+        public int MaxDuration = 0;
+
+        public Dictionary<string, MemorySnapshot> _memorySnapshots;
+        public MemorySnapshot LastMemorySnapshotBefore = null;
+
+        public Dictionary<string, MemorySnapshot> MemorySnapshots
+        {
+
+            get
+            {
+                if (_memorySnapshots == null)
+                    _memorySnapshots = new Dictionary<string, MemorySnapshot>();
+                return _memorySnapshots;
+            }
+            set
+            {
+                _memorySnapshots = value;
+            }
+        }
+
         public void Dispose()
         {
+            _Binders.Clear();
+            _BindersLazy.Clear();
+            _memorySnapshots.Clear();
+            LastMemorySnapshotBefore = null;
+
             if (_NativeContext != null)
                 V8NetProxy.DeleteContext(_NativeContext);
             _NativeContext = null;
@@ -74,5 +106,76 @@ namespace V8.Net
 
         public static implicit operator Context(NativeContext* ctx) => new Context(ctx);
         public static implicit operator NativeContext* (Context ctx) => ctx._NativeContext;
+    }
+
+
+    public unsafe class MemorySnapshot {
+        public List<Int32> ExistingHandleIDs;
+        public List<Int32> ExistingObjectIDs;
+
+        public Dictionary<Int32, int> ChildHandleIDs;
+
+        public MemorySnapshot(V8Engine engine)
+        {
+            Init(engine);
+        }
+
+        public void Reset()
+        {
+            if (ExistingHandleIDs == null)
+                ExistingHandleIDs = new List<Int32>();
+            else
+                ExistingHandleIDs.Clear();
+
+            if (ExistingObjectIDs == null)
+                ExistingObjectIDs = new List<Int32>();
+            else
+                ExistingObjectIDs.Clear();
+
+            if (ChildHandleIDs == null)
+                ChildHandleIDs = new Dictionary<Int32, int>();
+            else
+                ChildHandleIDs.Clear();
+        }
+
+        public void Init(V8Engine engine) 
+        {
+            Reset();
+
+            for (var i = 0; i < engine._HandleProxies.Length; i++)
+            {
+                var hProxy = engine._HandleProxies[i];
+                if (hProxy != null && !hProxy->IsCLRDisposed)
+                {
+                    ExistingHandleIDs.Add(i);
+                }
+            }
+
+            for (var i = 0; i < engine._Objects.Count; i++)
+            {
+                var rootableRef = engine._Objects[i]; 
+                if (rootableRef != null) {
+                    InternalHandle h = ((V8NativeObject)rootableRef.Target)?._ ?? InternalHandle.Empty;
+                    if (!h.IsEmpty) {
+                        ExistingObjectIDs.Add(i);
+                    }
+                }
+            }
+        }
+
+        public void Add(InternalHandle h)
+        {
+            if (ExistingHandleIDs.LastIndexOf(h.HandleID) < 0)
+                ExistingHandleIDs.Add(h.HandleID);
+            if (h.ObjectID != -1 && ExistingObjectIDs.LastIndexOf(h.ObjectID) < 0)
+                ExistingObjectIDs.Add(h.ObjectID);
+        }
+
+        public void Remove(InternalHandle h)
+        {
+            ExistingHandleIDs.Remove(h.HandleID);
+            if (h.ObjectID != -1)
+                ExistingObjectIDs.Remove(h.ObjectID);
+        }
     }
 }

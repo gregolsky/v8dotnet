@@ -268,10 +268,12 @@ namespace V8.Net
                     if (IsBinder) {
                         descObject += $", BoundObjectType={BoundObject?.GetType()}";
                     }
-#if DEBUG
-                    if (Object is IV8DebugInfo info)
-                        descObject += info.Summary;
-#endif
+
+                    if (IsMemoryChecksOn)
+                    {
+                        if (Object is IV8DebugInfo info)
+                            descObject += info.Summary;
+                    }
                 }
                 return _HandleProxy != null ? _HandleProxy->Summary + $", refCount={RefCount}, isRooted={IsRooted}{descObject}" : null;
             }
@@ -321,6 +323,7 @@ namespace V8.Net
         {
             //if (!(IsObject || IsFunction)) throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
 
+            CheckConsistency(isNullRefCountAllowed: true);
             if ((IsObject || IsFunction) && _HandleProxy->_ObjectID >= 0)
             {
                 if (!IsRooted)
@@ -328,8 +331,12 @@ namespace V8.Net
                     /*if (_Object == null) {
                         GetTrackableHandle(); //_Object = Object;
                     }*/
+                    CheckConsistency(false);
                     if (Engine._MakeObjectRooted(_HandleProxy->_ObjectID, _Object, this)) // (returns false if already rooted)
+                    {
                         V8NetProxy.MakeWeakHandle(this);
+                        CheckConsistency(true);
+                    }
                 }
             }
             //else throw new InvalidOperationException($"This handle only tracks a native side object. {nameof(KeepAlive)}() only keeps alive managed-side objects from being garbage collected."
@@ -452,6 +459,8 @@ namespace V8.Net
         /// </summary>
         public InternalHandle(ref InternalHandle h, bool keepTrack = true)
         {
+            h.CheckConsistency();
+
             keepTrack = true;
             _HandleProxy = null;
             _Object = null;
@@ -466,6 +475,7 @@ namespace V8.Net
                     h._Object = _Object;
                 }*/
             }
+            CheckConsistency();
         }
 
         /// <summary>
@@ -506,9 +516,11 @@ namespace V8.Net
         /// </summary>
         public InternalHandle Set(InternalHandle h)
         {
+            h.CheckConsistency();
             h.KeepTrack();
             _Set(h);
             CountedRef.Inc();
+            CheckConsistency();
             return this;
         }
 
@@ -596,6 +608,8 @@ namespace V8.Net
         }
 
         // --------------------------------------------------------------------------------------------------------------------
+        public bool IsMemoryChecksOn => Engine?.IsMemoryChecksOn ?? false;
+
         public CountedReference CountedRef {
             get {
                 var cref = Engine?.GetCountedReference(HandleID);
@@ -619,7 +633,9 @@ namespace V8.Net
 
         public void Dec()
         {
+            CheckConsistency(prefixOpt: "before Dec");
             CountedRef?.Dec();
+            CheckConsistency(prefixOpt: "after Dec");
         }
 
         public bool IsRooted {
@@ -728,8 +744,34 @@ namespace V8.Net
             return true;
         }
 
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void CheckConsistency(bool? isRootedOpt = null, bool isNullRefCountAllowed = false, bool isAfterDec = false, string prefixOpt = null)
+        {
+            if (!IsMemoryChecksOn)
+                return;
+
+            string prefix = prefixOpt != null ? $"{prefixOpt}: " : "";
+            bool isRooted = isRootedOpt ?? IsRooted;
+            bool isEmpty = IsEmpty;
+            int minRefCount = (isEmpty || isAfterDec) ? 0 : 1 + (isRooted ? 1 : 0);
+            int refCount = RefCount;
+            if (refCount == CountedReference.UndefinedRefCount)
+            {
+                if (isRooted)
+                    throw new InvalidOperationException($"The handle is rooted but doesn't have RefCount: {prefix}{Summary}");
+                if (!(IsEmpty || (isNullRefCountAllowed && CanDispose)))
+                    throw new InvalidOperationException($"The handle is not empty but doesn't have RefCount: {prefix}{Summary}");
+            }
+            else if (refCount < minRefCount)
+                throw new InvalidOperationException($"The handle has less ref count then needed minimum {minRefCount}: {prefix}{Summary}");
+            else if (isEmpty && refCount > 0)
+                throw new InvalidOperationException($"The handle is empty but has RefCount > 0: {prefix}{Summary}");
+        }
+
         bool _Dispose(bool ignoreErrors)
         {
+            CheckConsistency(isNullRefCountAllowed: true, prefixOpt: "before Dec");
             var cref = CountedRef;
             if (cref != null) {
                 cref.Dec();
@@ -738,11 +780,19 @@ namespace V8.Net
             if (CanDispose)
             {
                 ForceDispose(false, false);
+                CheckConsistency(isNullRefCountAllowed: true, prefixOpt: "after ForceDispose");
                 return true;
             }
-            else if (!ignoreErrors)
-                throw new InvalidOperationException("The handle is locked and cannot be disposed. Locked handles are either the global object, or belong to 'V8NativeObject' objects, which are responsible for disposing them under controlled conditions.");
+            else 
+            {
+                if (IsMemoryChecksOn && cref.RefCount <= 0)
+                    throw new InvalidOperationException($"The handle is locked while its reference count is zero: {Summary}");
 
+                if (!ignoreErrors)
+                    throw new InvalidOperationException($"The handle is locked and cannot be disposed. Locked handles are either the global object, or belong to 'V8NativeObject' objects, which are responsible for disposing them under controlled conditions: {Summary}");
+            }
+
+            CheckConsistency(isNullRefCountAllowed: true, isAfterDec: true, prefixOpt: "after Dec");
             _HandleProxy = null;
             _Object = null;
             return false;
@@ -850,7 +900,7 @@ namespace V8.Net
 
         public static implicit operator double(InternalHandle handle)
         {
-            return (double)Types.ChangeType(handle.Value, typeof(double));
+            return (double)Types.ChangeType(handle.ValueRaw, typeof(double));
         }
 
         public static implicit operator string(InternalHandle handle)
@@ -860,9 +910,11 @@ namespace V8.Net
 
         public static implicit operator DateTime(InternalHandle handle)
         {
-            object value = handle.Value;
+            return (DateTime)handle.Value;
+            /*object value = handle.Value;
             var ms = (double)Types.ChangeType(value, typeof(double));
-            return new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(ms);
+            var ms = (double)Types.ChangeType(value, typeof(double));
+            return new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(ms);*/
             //return new DateTime(1970, 1, 1) + TimeSpan.FromMilliseconds(ms);
         }
 
@@ -1019,6 +1071,28 @@ namespace V8.Net
 
                     V8NetProxy.UpdateHandleValue(_HandleProxy);
                     return _HandleProxy->Value;
+                }
+                else return null;
+            }
+        }
+
+        public object ValueRaw
+        {
+            get
+            {
+                if (_HandleProxy != null)
+                {
+                    if (IsBinder)
+                        return BoundObject;
+
+                    if (CLRTypeID >= 0)
+                    {
+                        var argInfo = new ArgInfo(Engine, this);
+                        return argInfo.ValueOrDefault; // (this object represents a ArgInfo object, so return its value)
+                    }
+
+                    V8NetProxy.UpdateHandleValue(_HandleProxy);
+                    return _HandleProxy->ValueRaw;
                 }
                 else return null;
             }
@@ -1483,14 +1557,20 @@ namespace V8.Net
         /// <seealso cref="M:V8.Net.IV8Object.SetProperty(string,InternalHandle,V8PropertyAttributes)"/>
         public bool SetProperty(string name, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None)
         {
+            CheckConsistency(prefixOpt: "self");
+            value.CheckConsistency(prefixOpt: "before KeepAlive");
             using (value.KeepAlive()) {
                 if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name (cannot be null, empty, or only whitespace)");
 
                 if (!IsObjectType)
                     throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
 
-                return V8NetProxy.SetObjectPropertyByName(this, name, value, attributes);
+                value.CheckConsistency(prefixOpt: "before SetObjectPropertyByName");
+                var res = V8NetProxy.SetObjectPropertyByName(this, name, value, attributes);
+                value.CheckConsistency(prefixOpt: "after SetObjectPropertyByName");
+                return res;
             }
+            value.CheckConsistency(prefixOpt: "after using");
         }
 
         /// <summary> Calls the V8 'Set()' function on the underlying native object. Returns true if successful. </summary>
@@ -1597,14 +1677,19 @@ namespace V8.Net
         /// in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
         /// <param name="memberSecurity">For object instances, these are default flags that describe JavaScript properties for all object instance members that
         /// don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
-        public bool SetProperty(Type type, V8PropertyAttributes propertyAttributes = V8PropertyAttributes.None, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null)
+        public bool SetProperty(Type type, V8PropertyAttributes propertyAttributes = V8PropertyAttributes.None, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null, bool addToLastMemorySnapshotBefore = false)
         {
             if (!IsObjectType)
                 throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
 
-            var func = (V8Function)Engine.CreateBinding(type, className, recursive, memberSecurity).Object;
+            var func = Engine.CreateBinding(type, className, recursive, memberSecurity);
+            if (IsMemoryChecksOn)
+            {
+                if (addToLastMemorySnapshotBefore)
+                    Engine.AddToLastMemorySnapshotBefore(func);
+            }
 
-            return SetProperty(func.FunctionTemplate.ClassName, func, propertyAttributes);
+            return SetProperty(((V8Function)func.Object).FunctionTemplate.ClassName, func.Clone(), propertyAttributes);
         }
 
         // --------------------------------------------------------------------------------------------------------------------
