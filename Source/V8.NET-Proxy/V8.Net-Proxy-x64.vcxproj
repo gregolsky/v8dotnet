@@ -104,12 +104,12 @@
     <LibraryPath>C:/windows/system32;$(V8_SRC)\v8\out.gn\windows-x64.$(Configuration)\obj\third_party\icu;$(V8_SRC)\v8\out.gn\windows-x64.$(Configuration)\obj\src\inspector;$(V8_SRC)\v8\out.gn\windows-x64.$(Configuration)\obj;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(V8_SRC)\v8\include;$(V8_SRC)\v8;$(IncludePath)</IncludePath>
+    <IncludePath>$(V8_SRC)\v8\include;$(V8_SRC)\v8;$(V8_SRC)\v8\third_party\icu\source\i18n;$(V8_SRC)\v8\third_party\icu\source\common;$(IncludePath);</IncludePath>
     <OutDir>..\bin\$(Configuration)\</OutDir>
     <IntDir>bin\$(Configuration)\x64\</IntDir>
     <TargetName>V8_Net_Proxy_x64</TargetName>
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <LibraryPath>C:/windows/system32;$(V8_SRC)\v8\out.gn\windows-x64.$(Configuration)\obj\third_party\icu;$(V8_SRC)\v8\out.gn\windows-x64.$(Configuration)\obj\src\inspector;$(V8_SRC)\v8\out.gn\windows-x64.$(Configuration)\obj;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:/windows/system32;$(V8_SRC)\v8\out.gn\x64.release;$(V8_SRC)\v8\out.gn\x64.release\obj;$(V8_SRC)\v8\out.gn\x64.release\obj\third_party\icu;$(V8_SRC)\v8\out.gn\x64.release\obj\src\inspector;$(V8_SRC)\v8\out.gn\x64.release\obj;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

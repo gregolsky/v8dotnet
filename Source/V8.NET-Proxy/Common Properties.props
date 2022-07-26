@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
-  <!-- <PropertyGroup Label="UserMacros">
-    <V8_SRC>C:\work\v8dotnet\Source\V8.NET-Proxy\V8</V8_SRC>
-  </PropertyGroup> -->
+  <PropertyGroup Label="UserMacros">
+    <V8_SRC>C:\work\v8repo</V8_SRC>
+    <BOOST_SRC>C:\Users\grego\Downloads\boost_1_79_0\boost</BOOST_SRC>
+  </PropertyGroup>
   <ItemGroup>
     <BuildMacro Include="V8_SRC">
       <Value>$(V8_SRC)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="BOOST_SRC">
+      <Value>$(BOOST_SRC)</Value>
       <EnvironmentVariable>true</EnvironmentVariable>
     </BuildMacro>
   </ItemGroup>

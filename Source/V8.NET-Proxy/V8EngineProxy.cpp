@@ -218,7 +218,11 @@ V8EngineProxy::V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debug
 	_DisposedEngines.push_back(false);
 	_EngineID = _NextEngineID++;
 
+#ifdef V8_OS_POSIX
 	setenv("TZ", "UTC", 1);
+#else
+	_putenv("TZ=UTC");
+#endif
 	DateTimeConfigurationChangeNotification(_Isolate, "UTC");
 
 	END_ISOLATE_SCOPE;
